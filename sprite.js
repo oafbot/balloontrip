@@ -44,10 +44,6 @@ function Sprite(screen, palette, dim, pix){
         return frame;
     }
 
-    this.move = function(){
-
-    }
-
     this.animate = function(f){
         for(var i=0, l=this.frames.length; i<l; i++){
             if(i===f)
@@ -71,7 +67,10 @@ function Sprite(screen, palette, dim, pix){
             group.add(arguments[i]);
             this.frames.push(arguments[i]);
         }
-        return group;
+        return {
+            sprite : group,
+            move : function(x, y){ group.dmove(x, y); }
+        };
     }
 
 }

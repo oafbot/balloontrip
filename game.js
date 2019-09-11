@@ -1,6 +1,6 @@
 function Game(){
     var self = this,
-        KEYFRAME = 10;
+        KEYFRAME = 8;
 
     this.counter = 0;
     this.frame = 0;

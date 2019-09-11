@@ -19,8 +19,10 @@ function Physics(game){
                 if(!game.PAUSED){
                     this.speedG += this.gravity;
                     var sign = game.controls.direction == "left" ? -1 : 1;
+                    var speed = sprite.cx() > game.bounds.left && sprite.cx() < game.bounds.right ? sign*self.momentum : 0;
+
                     if(ground===undefined || sprite.cy() < ground - sprite.bbox().height){
-                        sprite.animate(100).dmove(sign*self.momentum, this.speedG);
+                        sprite.animate(100).dmove(speed, this.speedG);
                         this.grounded = false;
                     }
                     else{
@@ -28,19 +30,10 @@ function Physics(game){
                         this.grounded = true;
                     }
                     this.lift = 0;
-                    // this.position();
                 }
             }
 
-            this.position = function() {
-                this.speedG += this.gravity;
-                this.x += this.speedX;
-                this.y += this.speedG;
-            }
-
             this.reset = function(){
-                this.speedX = 0;
-                this.speedY = 0;
                 this.speedG = 0;
                 this.x = sprite.x();
                 this.y = sprite.y();
@@ -48,6 +41,7 @@ function Physics(game){
 
             this.float = function(){
                 this.lift -= this.bouyancy;
+                this.reset();
             }
 
             this.reset();
@@ -62,5 +56,9 @@ function Physics(game){
     this.accelerate = function(inc){
         if(Math.abs(this.momentum) < this.topspeed)
             this.momentum += inc;
+    }
+    this.decelerate = function(dec){
+        if(this.momentum > this.basespeed)
+            this.momentum -= dec;
     }
 }

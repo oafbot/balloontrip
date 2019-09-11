@@ -36,11 +36,11 @@ function Controller(game){
 
     this.init = function(direction){
         var opts = {};
+        opts[keys.PAUSE]     = function(){ self.pause(); };
         opts[keys.LEFT]      = function(){ if(!self.game.PAUSED) self.left();  };
         opts[keys.UP]        = function(){ if(!self.game.PAUSED) self.up();    };
         opts[keys.RIGHT]     = function(){ if(!self.game.PAUSED) self.right(); };
         opts[keys.DOWN]      = function(){ if(!self.game.PAUSED) self.down();  };
-        opts[keys.PAUSE]     = function(){ self.pause(); };
         opts[keys.A]         = function(){ if(!self.game.PAUSED) self.a()      };
         opts[keys.B]         = function(){ if(!self.game.PAUSED) self.b()      };
         opts[keys.LEFT_ALT]  = function(){ if(!self.game.PAUSED) self.left();  };
@@ -70,8 +70,7 @@ function Controller(game){
                 timers[key]= null;
                 keys[key]();
                 if (repeat!==0)
-                    // requestAnimationFrame(function(){ console.log(key) });
-                    timers[key] = true;
+                    requestAnimationFrame(function(){ /*console.log(key);*/  timers[key] = true; });
                     // timers[key] = setInterval(keys[key], repeat);
             }
             return false;
@@ -83,7 +82,7 @@ function Controller(game){
             if (key in timers) {
                 // if (timers[key]!==null)
                     // clearInterval(timers[key]);
-                delete timers[key];
+                requestAnimationFrame(function(){ delete timers[key]; });
             }
         };
 
