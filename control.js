@@ -81,8 +81,7 @@ function Controller(game){
         document.onkeyup = function(event) {
             var key= (event || window.event).keyCode;
             if (key in timers) {
-                if (timers[key]!==null)
-
+                // if (timers[key]!==null)
                     // clearInterval(timers[key]);
                 delete timers[key];
             }

@@ -5,6 +5,7 @@ const DIM = 8;
 
 var game,
     physics,
+    gravity,
     control,
     dude,
     dude2,
@@ -175,7 +176,7 @@ var game,
 
     palette = [null, '#f06', '#06f', '#fc9'];
 
-    var stage = screen.rect('100%', '100%')
+    var stage = screen.rect('100%', '60%')
     stage.fill('#000');
 
     game = new Game();
@@ -216,7 +217,8 @@ var game,
     // frames2.opacity(0);
 
     physics = new Physics(game);
-    var gravity = physics.gravity( frames, 4, game.bounds.bottom );
+    gravity = physics.gravity( frames, 4, game.bounds.bottom );
+    physics.topspeed = DIM;
 
     control = new Controller(game);
     control.init();
@@ -231,47 +233,45 @@ var game,
     var time = Date.now();
 
     var update = function(){
-        // if( control.pressed("RIGHT") ){
-        //     control.direction = "right";
-        // }
-        // if( control.pressed("LEFT") ){
-        //     control.direction = "left";
-        // }
+        if( control.pressed("RIGHT") ){
+            if(control.direction=="right")
+                physics.accelerate(PIX);
+            else if(control.direction=="left")
+                physics.momentum = 0;
+            game.frame = game.frame < 3 ? game.frame + 1 : 0;
+            dude.animate(game.frame);
+        }
+        if( control.pressed("LEFT") ){
+            if(control.direction=="left")
+                physics.accelerate(PIX);
+            else if(control.direction=="right")
+                physics.momentum = 0;
+            game.frame = game.frame < 3 ? game.frame + 1 : 0;
+            dude.animate(game.frame);
+        }
 
         if( control.pressed("A") ){
-
-
             // if(control.direction == "right")
             //     dude2.animate(game.frame);
             // else
-                dude.animate(game.frame);
+            dude.animate(game.frame);
 
             gravity.reset();
+            gravity.float();
             time = Date.now();
             if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
+                if(control.direction=="up")
+                    physics.momentum = 0;
                 control.direction = "up";
             }
         }else{
-            // setTimeout(gravity.update.bind(gravity), 200);
-            // if(Date.now()-time<500 && Date.now()-time > 0)
-            //     switch(control.direction){
-            //         case "left":
-            //             gravity.momentum = -DIM/*/(9.8/gravity.speedG)*/;
-            //             break;
-            //         case "right":
-            //             gravity.momentum = DIM /*/(9.8/gravity.speedG)*/;
-            //             break;
-            //         case "up":
-            //             gravity.momentum = 0;
-            //             break;
-            //     }
             gravity.update();
         }
-        // console.log(control.keypress)
     };
 
     var tween = function(){
         var mov;
+        console.log(physics.momentum)
         if( control.pressed("RIGHT") ){
             // mov = control.pressed("A") ? PIX*2 :PIX;
             // if(control.direction!='right' && control.direction!='up')
@@ -279,9 +279,16 @@ var game,
             // frames.opacity(0);
             // frames2.opacity(1);
             control.direction = "right";
-            if(frames.cx()<game.bounds.right)
-                frames.dmove(PIX, 0);
-            gravity.momentum = DIM
+            if(frames.cx()<game.bounds.right && !gravity.grounded){
+                // physics.accelerate(PIX);
+                frames.dmove(physics.momentum, 0);
+                // physics.momentum = DIM
+                gravity.grounded = false;
+                // physics.accelerate(PIX);
+            }
+            else{
+                physics.momentum = 0;
+            }
         }
         if( control.pressed("LEFT") ){
             // if(control.direction!='left' && control.direction!='up')
@@ -290,17 +297,25 @@ var game,
             // frames.opacity(1);
             control.direction = "left";
             // mov = control.pressed("A") ? PIX*2 :PIX;
-            if(frames.cx()>game.bounds.left)
-                frames.dmove(-PIX, 0);
-            gravity.momentum = -DIM;
+            if(frames.cx()>game.bounds.left && !gravity.grounded){
+                // physics.accelerate(PIX);
+                frames.dmove(-physics.momentum, 0);
+                // physics.momentum = -DIM;
+                gravity.grounded = false;
+            }
+            else{
+                physics.momentum = 0;
+            }
         }
 
         if( control.pressed("A") ){
             mov = control.pressed("LEFT") || control.pressed("RIGHT") ? PIX/4 : PIX/2
             // game.frame = game.frame < 3 ? game.frame + 1 : 0;
             // dude.animate(game.frame);
-            frames.dmove(0, -mov);
-            gravity.momentum = 0;
+            // gravity.float(-gravity.gravity*5);
+            frames.dmove(0, gravity.lift);
+            // physics.momentum = 0;
+            gravity.grounded = false;
         }
     };
 
