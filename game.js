@@ -6,6 +6,7 @@ function Game(){
     this.frame = 0;
 
     this.queue = {update:[], tween:[]};
+    this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
 
     this.update = function(){
         for(var i=0, l=this.queue.update.length; i<l; i++){
@@ -45,5 +46,12 @@ function Game(){
     this.pause = function(){
         this.PAUSED = true;
         console.log("paused.");
+    }
+
+    this.init = function(options){
+        keys = Object.keys(options);
+        for(var key in options){
+            self[key] = options[key];
+        }
     }
 }

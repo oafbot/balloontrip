@@ -179,6 +179,10 @@ var game,
     stage.fill('#000');
 
     game = new Game();
+
+    game.init({bounds:{ top: 0, bottom: stage.y() + stage.bbox().height, left: 0, right: stage.x() + stage.bbox().width}})
+
+
     dude = new Sprite(screen, palette, DIM, PIX);
     //dude2 = new Sprite(screen, palette, DIM, PIX);
     frame1 = dude.draw(dude1, {x:0, y:DIM*2*PIX});
@@ -212,7 +216,7 @@ var game,
     // frames2.opacity(0);
 
     physics = new Physics(game);
-    var gravity = physics.gravity( frames, 4, stage.y() + stage.bbox().height );
+    var gravity = physics.gravity( frames, 4, game.bounds.bottom );
 
     control = new Controller(game);
     control.init();
@@ -275,7 +279,8 @@ var game,
             // frames.opacity(0);
             // frames2.opacity(1);
             control.direction = "right";
-            frames.dmove(PIX, 0);
+            if(frames.cx()<game.bounds.right)
+                frames.dmove(PIX, 0);
             gravity.momentum = DIM
         }
         if( control.pressed("LEFT") ){
@@ -285,7 +290,8 @@ var game,
             // frames.opacity(1);
             control.direction = "left";
             // mov = control.pressed("A") ? PIX*2 :PIX;
-            frames.dmove(-PIX, 0);
+            if(frames.cx()>game.bounds.left)
+                frames.dmove(-PIX, 0);
             gravity.momentum = -DIM;
         }
 
