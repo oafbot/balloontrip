@@ -53,15 +53,6 @@ var game,
     game.cast.balloons = [];
 
     var balloon = new Sprite(game, palette2, DIM, PIX);
-
-    // function* frames(){
-    //     var i=0, f = [balloon.group(balloon.draw(bal3), balloon.draw(bal4, { x:0, y: DIM*2*PIX })),
-    //     balloon.group(balloon.draw(bal3), balloon.draw(bal5, { x:0, y: DIM*2*PIX })),
-    //     balloon.group(balloon.draw(bal3), balloon.draw(bal5, { x:0, y: DIM*2*PIX })),
-    //     balloon.group(balloon.draw(bal3), balloon.draw(bal4, { x:0, y: DIM*2*PIX }))]
-    //     while(true)
-    //         yield f[i++];
-    // };
     var balloon_frames = [
         [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]],
         [[bal3, { x:0, y: 0}], [bal5, { x:0, y: DIM*2*PIX }]],
@@ -70,32 +61,20 @@ var game,
     ];
 
 
-    var factory = function(){
-        var bal = new Sprite(game, palette2, DIM, PIX);
-            bal.add(
-                bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX })),
-                bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
-                bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
-                bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX }))
-            );
-        bal.frames[0];
-        bal.frames[1].opacity(0);
-        bal.frames[2].opacity(0);
-        bal.frames[3].opacity(0);
-        return bal;
-    };
-
-
-    // bal.factory('balloon')
-    // console.log(bal, bal.clone());
-    //     return {
-    //         object : bal,
-    //         box : balloon
-    //     }
-    // }
-
-    // balloon.sprite.move(100,100)
-    // balloon.sprite.clone().move(100,100)
+    // var factory = function(){
+    //     var bal = new Sprite(game, palette2, DIM, PIX);
+    //         bal.add(
+    //             bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX })),
+    //             bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
+    //             bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
+    //             bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX }))
+    //         );
+    //     bal.frames[0];
+    //     bal.frames[1].opacity(0);
+    //     bal.frames[2].opacity(0);
+    //     bal.frames[3].opacity(0);
+    //     return bal;
+    // };
 
     // game.layers.objects.add(bal.sprite);
 
@@ -103,8 +82,6 @@ var game,
     dude.frames[1].opacity(0);
     dude.frames[2].opacity(0);
     dude.frames[3].opacity(0);
-
-
 
     var start = {x: stage.x() + stage.bbox().width - player.sprite.bbox().width*3, y:stage.y() + stage.bbox().height/2 - player.sprite.bbox().height };
     player.sprite.move(start.x, start.y);
@@ -145,12 +122,9 @@ var game,
         var y = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2);
 
         if(Math.random()<0.03){
-            // b = bal.clone();
             // b = factory();
-            b = balloon.factory('balloon', balloon_frames);
-            // game.cast.balloons.push(balloon.factory());
+            b = balloon.factory('balloons', balloon_frames);
             game.layers.objects.add(b.sprite.move(0-game.layers.objects.x(), y).attr('class', 'balloon'));
-            game.cast.balloons.push(b);
         }
 
         game.layers.objects.select('.balloon').each(function(i, children){
@@ -175,18 +149,16 @@ var game,
             dude.animate(game.frame);
         }
         // console.log(game.layers.objects.select('.balloon'))
-        game.layers.objects.select('.balloon').each(
-            function(i, elem){
-                // console.log(elem[i].parent());
-                // elem[i].animate(game.frame)
-        });
+        // game.layers.objects.select('.balloon').each(
+        //     function(i, elem){
+        //         // console.log(elem[i].parent());
+        //         // elem[i].animate(game.frame)
+        // });
         generate();
-        // if(game.counter%20===0)
-
-        for(var i=0, l=game.cast.balloons.length; i<l; i++){
-            // console.log(i, game.cast.balloons[i])
-            game.cast.balloons[i].animate(game.frame);
-        }
+        if(game.counter%20===0)
+            for(var i=0, l=game.cast.balloons.length; i<l; i++){
+                game.cast.balloons[i].animate(game.frame);
+            }
     };
 
     var tween = function(){

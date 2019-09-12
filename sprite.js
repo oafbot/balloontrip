@@ -118,6 +118,12 @@ function Sprite(game, palette, dim, pix){
 
         for(i=0, l=s.frames.length; i<l; i++)
             if(i!==0) s.frames[i].opacity(0);
+
+        if(game.cast.hasOwnProperty(name))
+            game.cast[name].push(s);
+        else
+            game.cast[name] = [];
+
         return s;
     };
 }
