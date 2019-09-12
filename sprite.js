@@ -1,16 +1,22 @@
-function Sprite(screen, palette, dim, pix){
+function Sprite(game, palette, dim, pix){
     var loc = [0, 0];
 
     this.frames = [];
+    this.game = game;
+    this.box = game.screen.group();
+    this.sprite = this.box;
+    this.dim = dim;
+    this.pix = pix;
+    this.palette = palette;
 
     this.init = function(){
-        this.box = screen.group();
+        
     }
 
     this.draw = function(bitmap, offset){
         var q, ql, i, l, row, mod,
 
-        frame = screen.group();
+        frame = game.screen.group();
 
         offset = offset === undefined ? {x : 0, y : 0} : offset;
 
@@ -54,7 +60,7 @@ function Sprite(screen, palette, dim, pix){
     }
 
     this.group = function(sprite1, sprite2){
-        var group = screen.group();
+        var group = game.screen.group();
         group.add(sprite1);
         group.add(sprite2);
         return group;
@@ -62,15 +68,56 @@ function Sprite(screen, palette, dim, pix){
     }
 
     this.add = function(){
-        var group = screen.group();
+        var group = this.box;
         for(var i=0, l=arguments.length; i<l; i++){
             group.add(arguments[i]);
             this.frames.push(arguments[i]);
         }
-        return {
-            sprite : group,
-            move : function(x, y){ group.dmove(x, y); }
-        };
+        return this;
+        // return {
+        //     sprite : group,
+        //     position : function(){ return {x: group.cx(), y: group.cy()} },
+        //     move : function(x, y){ group.dmove(x, y); },
+        //     object : this
+        // };
     }
 
+    this.move = function(x, y){
+        this.box.dmove(x, y);
+    };
+
+    this.position = function(){
+        return {x: this.box.cx(), y:this.box.cy()}
+    };
+
+    this.clone = function(){
+        var c = Object.assign(new Sprite(game, palette, dim, pix), this);
+        c.box = game.screen.group();
+        c.sprite = c.box;
+        for(var i=0, l=this.frames.length; i<l; i++){
+            c.frames[i] = this.frames[i].clone();
+            c.box.add(c.frames[i]);
+        }
+        return c;
+    };
+
+    this.factory = function(name, bitmaps){
+        var i, l, j, m
+        frames = [],
+        s = new Sprite(this.game, this.palette, this.dim, this.pix);
+
+        for(i=0, l=bitmaps.length; i<l; i++){
+            var group = game.screen.group();
+            for(j=0, m=bitmaps[i].length; j<m; j++){
+                group.add(s.draw(bitmaps[i][j][0], bitmaps[i][j][1]));
+            }
+            frames.push(group)
+        }
+
+        s.add(...frames);
+
+        for(i=0, l=s.frames.length; i<l; i++)
+            if(i!==0) s.frames[i].opacity(0);
+        return s;
+    };
 }

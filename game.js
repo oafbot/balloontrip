@@ -1,12 +1,16 @@
-function Game(){
+function Game(screen){
     var self = this,
         KEYFRAME = 8;
 
     this.counter = 0;
     this.frame = 0;
+    this.started = false;
+    this.screen = screen;
 
-    this.queue = {update:[], tween:[]};
+    this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
+    this.layers = { background:{}, sprites:{}, obstacles:{}, foreground:{}, objects:{} };
+    this.cast = {};
 
     this.update = function(){
         for(var i=0, l=this.queue.update.length; i<l; i++){
