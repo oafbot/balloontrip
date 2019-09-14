@@ -16,10 +16,36 @@
         .press2p{
             font-family: 'Press Start 2P';
         }
+
+        #screen{
+            width:800px;
+            height:480px;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        .info{
+            font-size: 0.9em;
+            padding:10px;
+            /*color: #f60;*/
+            color: #aaa;
+        }
+        .info span{
+            font-size: 0.8em;
+            line-height: 1.6em;
+        }
     </style>
     <!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js"></script>-->
 </head>
 <body>
-     <div id="drawing" class="press2p"></div>
+    <div id="screen" class="press2p"></div>
+    <div class="info press2p">
+        CONTROLS
+        <p>
+            <span>SPACE: START</span><br>
+            <span>Z KEY: FLAP</span><br>
+            <span>&larr; KEY: LEFT</span><br>
+            <span>&rarr; KEY: RIGHT</span><br>
+        </p>
+    </div>
 </body>
 </html>

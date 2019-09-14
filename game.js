@@ -9,7 +9,13 @@ function Game(screen){
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
-    this.layers = { background:{}, sprites:{}, obstacles:{}, foreground:{}, objects:{}, text:screen.group() };
+    this.layers = {
+        background : screen.group().attr('id', 'background'),
+        sprites    : screen.group().attr('id', 'sprites'),
+        obstacles  : screen.group().attr('id', 'obstacles'),
+        objects    : screen.group().attr('id', 'objects'),
+        foreground : screen.group().attr('id', 'foreground'),
+        text       : screen.group().attr('id', 'text') };
     this.cast = {};
     this.state = 0;
     this.funcs = {};
@@ -55,7 +61,7 @@ function Game(screen){
         this.PAUSED = false;
         requestAnimationFrame(this.loop);
         this.state = this.states["RUNNING"];
-        console.log("running.")
+        // console.log("running.")
     };
 
     this.start = function(fn){
@@ -70,7 +76,7 @@ function Game(screen){
     this.pause = function(){
         this.PAUSED = true;
         this.state = this.states["PAUSED"];
-        console.log("paused.");
+        // console.log("paused.");
     }
 
     this.gameover = function(){
