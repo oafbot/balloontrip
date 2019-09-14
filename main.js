@@ -2,6 +2,9 @@ SVG.on(document, 'DOMContentLoaded', function() {
 
 const PIX = 2;
 const DIM = 8;
+const GRAVITY = 0.12;
+const DELAY = 500;
+
 
 var game,
     physics,
@@ -15,6 +18,7 @@ var game,
     frame3,
     frame4,
     digits,
+
     screen = SVG('drawing'),
     b = bitmap,
 
@@ -33,6 +37,7 @@ var game,
 
     var palette  = [null, '#f06', '#06f', '#fc9'];
     var palette2 = [null, '#9f9', '#06f', '#fff'];
+    var palette3 = [null, '#06f', '#3cf', '#fff'];
 
     var stage = screen.rect('100%', '60%')
     stage.fill('#000');
@@ -41,6 +46,9 @@ var game,
     game.init({ bounds:{ top: 0, bottom: stage.y() + stage.bbox().height, left: 0, right: stage.x() + stage.bbox().width} })
 
     game.layers.objects = screen.group();
+    game.layers.sprites = screen.group();
+    game.layers.foreground = screen.group();
+
     game.cast.balloons = [];
     game.cast.bolts    = [];
     game.score = 0;
@@ -54,6 +62,8 @@ var game,
 
     var player = dude.add(frame1, frame2, frame3, frame4);
 
+    game.layers.sprites.add(player.sprite);
+
     var balloon = new Sprite(game, palette2, DIM, PIX);
     var balloon_frames = [
         [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]],
@@ -65,27 +75,35 @@ var game,
 
     var bolt = new Sprite(game, palette, DIM, PIX);
     var bolt_frames = [
-        [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
+        [[ [b[23], b[24], b[25], b[26]], { x:0, y: 0} ]],
         [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
         [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
         [[[b[35], b[36], b[37], b[38]], { x:0, y: 0}]]
     ];
+
+    var water = new Sprite(game, palette3, DIM, PIX);
+    // var water_frames = [
+    //     [ [[b[43]], { x:0, y:0 }] ]
+    // ];
+    for(var i=0, l=game.bounds.right; i<l; i+=DIM*PIX){
+        var w = water.draw( [b[43], b[44], b[45], b[46]], { x:0, y:0} ).attr('class', 'water');
+        game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX));
+    }
 
     dude.frames[0];
     dude.frames[1].opacity(0);
     dude.frames[2].opacity(0);
     dude.frames[3].opacity(0);
 
-    // var dead = dude.factory('dead', [dude5, {x:100, y:100}]);
     var dead = dude.draw(dude5, {x:0, y:0});
-    dead.move(100,100);
     dead.opacity(0);
+    game.layers.sprites.add(dead);
 
     var start = {x: stage.x() + stage.bbox().width - player.sprite.bbox().width*3, y:stage.y() + stage.bbox().height/2 - player.sprite.bbox().height };
     player.sprite.move(start.x, start.y);
 
     physics = new Physics(game);
-    gravity = physics.gravity( player.sprite, 0.2);
+    gravity = physics.gravity(player.sprite, GRAVITY);
     physics.speedRange(PIX, PIX*3);
 
     control = new Controller(game);
@@ -93,17 +111,14 @@ var game,
     // screen.transform({scale:1.2})
 
     control.set("left",  function(){
-        // console.log("left");
         physics.momentum = physics.basespeed;
     });
 
     control.set("right", function(){
-        // console.log("right");
         physics.momentum = physics.basespeed;
     });
 
     control.set("a",     function(){
-        // console.log("a");
         if(!game.started && game.state=="running") game.started = true;
         game.frame = game.frame < 3 ? game.frame + 1 : 0;
         dude.animate(game.frame);
@@ -124,13 +139,6 @@ var game,
             setTimeout(sound.play('music'), 500);
             this.game.run();
         }
-
-        // if(game.state=='paused'){
-        //     s
-        // }
-        // else if(game.started && game.state=='paused'){
-        //     game.started 
-        // }
     })
 
     game.display('score', 10, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
@@ -164,7 +172,6 @@ var game,
         y2 = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2);
 
         if(d1<0.05){
-            // b = factory();
             b = balloon.factory('balloons', balloon_frames);
             game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
         }
@@ -174,14 +181,28 @@ var game,
             game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*2, y2).attr('class', 'bolt'));
         }
 
-        game.layers.objects.select('.balloon').each(function(i, children){
-            var exit = stage.bbox().width - (children[i].x()+game.layers.objects.x()) < 0;
-            if(exit) children[i].remove();
+        game.layers.objects.select('.balloon').each(function(c, children){
+            var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
+            if(exit){
+                for(var i=0, l=game.cast.balloons.length; i<l; i++){
+                    if(game.cast.balloons[i]!==undefined && game.cast.balloons[i].sprite===children[c]){
+                        delete game.cast.balloons[i]
+                    }
+                }
+                children[c].remove();
+            }
         });
 
-        game.layers.objects.select('.bolt').each(function(i, children){
-            var exit = stage.bbox().width - (children[i].x()+game.layers.objects.x()) < 0;
-            if(exit) children[i].remove();
+        game.layers.objects.select('.bolt').each(function(c, children){
+            var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
+            if(exit){
+                for(var i=0, l=game.cast.bolts.length; i<l; i++){
+                    if(game.cast.bolts[i]!==undefined && game.cast.bolts[i].sprite===children[c]){
+                        delete game.cast.bolts[i]
+                    }
+                }
+                children[c].remove();
+            }
         });
     };
 
@@ -209,14 +230,15 @@ var game,
             }
         }
 
-        if(game.counter%20===0)
+        if(game.counter%20===0){
             for(var i=0, l=game.cast.balloons.length; i<l; i++){
                 if(game.cast.balloons[i]!==undefined){
                         game.cast.balloons[i].animate(game.frame);
                 }
             }
+            game.score += 10;
+        }
 
-        game.score += 1;
         digits = String(game.score).length;
         digits = 10 - digits;
         game.textbox.score.text('Score: ' + "0".repeat(digits) + game.score);
@@ -267,8 +289,8 @@ var game,
             if(player.sprite.cy() < game.bounds.top){
                 physics.deflect(player.sprite);
             }else{
-                player.move(0, gravity.lift);
-                gravity.float();
+                // player.move(0, gravity.lift);
+                gravity.float(DELAY);
             }
             gravity.grounded = false;
         }
@@ -287,7 +309,7 @@ var game,
                     delete game.cast.balloons[i];
                     sound.audio.burst.currentTime = 0;
                     sound.play('burst');
-                    game.score += 100;
+                    game.score += 300;
                     digits = String(game.score).length;
                     digits = 10 - digits;
                     game.textbox.score.text('Score: ' + "0".repeat(digits) + game.score);
@@ -306,16 +328,24 @@ var game,
 
     var scroll = function(){
         var items = game.layers.objects.children();
+        var foreground = game.layers.foreground.children();
+
         for(var i=0, l=items.length; i<l; i++){
             items[i].dmove(PIX*0.75);
         }
-        // game.layers.objects.dmove(PIX*0.75);
+
+        // for(var i=0, l=foreground.length; i<l; i++){
+        //     var exit = stage.bbox().width - (foreground[i].x()+game.layers.foreground.x()) < 0;
+        //     if(exit)
+        //         foreground[i].move(0);
+        //     else
+        //         foreground[i].dmove(PIX*0.75);
+        // }
 
         if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width)
             player.move(PIX/2);
         if(player.position().x==game.bounds.right-player.sprite.bbox().width)
             game.started = true;
-
     };
 
     var gameover = function(){
@@ -330,8 +360,6 @@ var game,
         setTimeout(function(){ sound.stop('fall'); }, 900);
         setTimeout(function(){ sound.play('dead'); }, 1000);
     };
-
-
 
     game.add(update, 'update');
     game.add(tween, 'tween');

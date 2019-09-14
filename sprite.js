@@ -9,9 +9,7 @@ function Sprite(game, palette, dim, pix){
     this.pix = pix;
     this.palette = palette;
 
-    // this.init = function(){
-        
-    // }
+    // this.init = function(){}
 
     this.draw = function(bitmap, offset){
         var q, ql, i, l, row, mod,
@@ -84,17 +82,6 @@ function Sprite(game, palette, dim, pix){
         return {x: this.box.cx(), y:this.box.cy()}
     };
 
-    // this.clone = function(){
-    //     var c = Object.assign(new Sprite(game, palette, dim, pix), this);
-    //     c.box = game.screen.group();
-    //     c.sprite = c.box;
-    //     for(var i=0, l=this.frames.length; i<l; i++){
-    //         c.frames[i] = this.frames[i].clone();
-    //         c.box.add(c.frames[i]);
-    //     }
-    //     return c;
-    // };
-
     this.factory = function(name, bitmaps){
         var i, l, j, m
         frames = [],
@@ -121,35 +108,13 @@ function Sprite(game, palette, dim, pix){
         return s;
     };
 
-    // this.bitmask = function(){
-    //     var mask = [];
-    //     for(var i=0, l=this.frames.length; i<l; i++){
-    //         var bits = this.frames[i].select('.bitmap').members[1].children();
-    //         for(var j=0, k=bits.length; j<k; j++){
-    //             mask.push([Math.floor(this.box.x() + bits[j].x()), Math.floor(this.box.y() + bits[j].y())]);
-    //         }
-    //     }
-    //     console.log(mask)
-    //     return mask;
-    // };
-
-    // this.collision = function(obj){
-    //     var mask1 = this.bitmask();
-    //     var mask2 = obj.bitmask();
-    //     console.log(obj)
-
-    //     for(var i=0, l=mask1.length; i<l; i++){
-    //         for(var j=0, k=mask2.length; j<k; j++){
-    //             if(mask1[i][0]===mask2[j][0] && mask1[i][1]===mask2[j][1])
-    //                 return true;
-    //         }
-    //     }
-    //     return false;
-    // };
-    //
     this.bitmask = function(){
-        // console.log(this.box.x(), this.box.y());
-        return { x0: this.box.x(), x1 : this.box.x() + this.box.bbox().width, y0: this.box.y(), y1: this.box.y() + this.box.bbox().height }
+        return {
+            x0: this.box.x()+pix,
+            x1: this.box.x() + this.box.bbox().width - pix,
+            y0: this.box.y()+pix,
+            y1: this.box.y() + this.box.bbox().height-pix
+        }
     };
 
     this.collision = function(obj){
