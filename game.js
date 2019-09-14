@@ -9,8 +9,18 @@ function Game(screen){
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
-    this.layers = { background:{}, sprites:{}, obstacles:{}, foreground:{}, objects:{} };
+    this.layers = { background:{}, sprites:{}, obstacles:{}, foreground:{}, objects:{}, text:screen.group() };
     this.cast = {};
+    this.state = 0;
+    this.funcs = {};
+    this.textbox = [];
+
+    this.states = {
+        "START"     : "start",
+        "RUNNING"   : "running",
+        "PAUSED"    : "paused",
+        "GAME_OVER" : "game over"
+    };
 
     this.update = function(){
         for(var i=0, l=this.queue.update.length; i<l; i++){
@@ -29,7 +39,7 @@ function Game(screen){
     }
 
     this.loop = function(){
-        if(!self.PAUSED){
+        if(!self.PAUSED && self.state!="game over"){
             if(self.counter%KEYFRAME===0){
                 self.update();
                 self.frame = self.frame < 3 ? self.frame + 1 : 0;
@@ -44,13 +54,35 @@ function Game(screen){
     this.run = function(){
         this.PAUSED = false;
         requestAnimationFrame(this.loop);
+        this.state = this.states["RUNNING"];
         console.log("running.")
+    };
+
+    this.start = function(fn){
+        if(fn!==undefined){
+            this.funcs.start = fn;
+        }
+        else if(this.funcs.hasOwnProperty('start')){
+            this.funcs.start();
+        }
     };
 
     this.pause = function(){
         this.PAUSED = true;
+        this.state = this.states["PAUSED"];
         console.log("paused.");
     }
+
+    this.gameover = function(){
+        this.GAME_OVER = true;
+        this.state = this.states["GAME_OVER"];
+    };
+
+    this.display = function(name, x, y, options){
+        this.textbox[name] = this.layers.text.text("");
+        this.textbox[name].move(x, y);
+        this.textbox[name].font(options);
+    };
 
     this.init = function(options){
         keys = Object.keys(options);

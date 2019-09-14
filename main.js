@@ -7,19 +7,23 @@ var game,
     physics,
     gravity,
     control,
+    sound,
     dude,
     dude2,
     frame1,
     frame2,
     frame3,
     frame4,
+    digits,
     screen = SVG('drawing'),
     b = bitmap,
 
-    dude1 = [b[0],  b[1],  b[2], b[3]],
-    dude2 = [b[0],  b[8],  b[2], b[9]],
-    dude3 = [b[0],  b[10], b[2], b[11]],
-    dude4 = [b[14], b[8],  b[2], b[9]],
+    dude1 = [b[0],  b[1],  b[2],  b[3]],
+    dude2 = [b[0],  b[8],  b[2],  b[9]],
+    dude3 = [b[0],  b[10], b[2],  b[11]],
+    dude4 = [b[14], b[8],  b[2],  b[9]],
+    dude5 = [b[39], b[40], b[41], b[42]],
+
 
     bal1 = [b[4],  b[5], b[6],  b[7]],
     bal2 = [b[12], b[5], b[13], b[7]],
@@ -37,20 +41,18 @@ var game,
     game.init({ bounds:{ top: 0, bottom: stage.y() + stage.bbox().height, left: 0, right: stage.x() + stage.bbox().width} })
 
     game.layers.objects = screen.group();
+    game.cast.balloons = [];
+    game.cast.bolts    = [];
+    game.score = 0;
 
     dude = new Sprite(game, palette, DIM, PIX);
-    // balloon2 = new Sprite(screen, palette2, DIM, PIX);
-    //dude2 = new Sprite(screen, palette, DIM, PIX);
+
     frame1 = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
     frame2 = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
     frame3 = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
     frame4 = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX }));
 
     var player = dude.add(frame1, frame2, frame3, frame4);
-
-    console.log(player.frames)
-
-    game.cast.balloons = [];
 
     var balloon = new Sprite(game, palette2, DIM, PIX);
     var balloon_frames = [
@@ -61,27 +63,23 @@ var game,
     ];
 
 
-    // var factory = function(){
-    //     var bal = new Sprite(game, palette2, DIM, PIX);
-    //         bal.add(
-    //             bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX })),
-    //             bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
-    //             bal.group(bal.draw(bal3), bal.draw(bal5, { x:0, y: DIM*2*PIX })),
-    //             bal.group(bal.draw(bal3), bal.draw(bal4, { x:0, y: DIM*2*PIX }))
-    //         );
-    //     bal.frames[0];
-    //     bal.frames[1].opacity(0);
-    //     bal.frames[2].opacity(0);
-    //     bal.frames[3].opacity(0);
-    //     return bal;
-    // };
-
-    // game.layers.objects.add(bal.sprite);
+    var bolt = new Sprite(game, palette, DIM, PIX);
+    var bolt_frames = [
+        [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
+        [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
+        [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
+        [[[b[35], b[36], b[37], b[38]], { x:0, y: 0}]]
+    ];
 
     dude.frames[0];
     dude.frames[1].opacity(0);
     dude.frames[2].opacity(0);
     dude.frames[3].opacity(0);
+
+    // var dead = dude.factory('dead', [dude5, {x:100, y:100}]);
+    var dead = dude.draw(dude5, {x:0, y:0});
+    dead.move(100,100);
+    dead.opacity(0);
 
     var start = {x: stage.x() + stage.bbox().width - player.sprite.bbox().width*3, y:stage.y() + stage.bbox().height/2 - player.sprite.bbox().height };
     player.sprite.move(start.x, start.y);
@@ -106,9 +104,48 @@ var game,
 
     control.set("a",     function(){
         // console.log("a");
-        if(!game.started) game.started = true;
+        if(!game.started && game.state=="running") game.started = true;
         game.frame = game.frame < 3 ? game.frame + 1 : 0;
         dude.animate(game.frame);
+    });
+
+    control.set("pause", function(){
+        if(this.game.state!=this.game.states["RUNNING"] && !game.started){
+            this.game.start();
+        }
+        else if(!this.game.PAUSED){
+            this.game.pause();
+            sound.pause('music');
+            sound.play('pause');
+        }
+        else{
+            sound.audio.pause.currTime = 0;
+            sound.play('pause');
+            setTimeout(sound.play('music'), 500);
+            this.game.run();
+        }
+
+        // if(game.state=='paused'){
+        //     s
+        // }
+        // else if(game.started && game.state=='paused'){
+        //     game.started 
+        // }
+    })
+
+    game.display('score', 10, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
+    game.textbox.score.text("Score: 0000000000");
+
+    game.start(function(){
+        sound = new Sound(game);
+        sound.new('music', 'sounds/trip.mp3');
+        sound.new('burst', 'sounds/burst.mp3');
+        sound.new('pause', 'sounds/pause.mp3');
+        sound.new('dead', 'sounds/clear.mp3');
+        sound.new('flap', 'sounds/flap.mp3');
+        sound.new('fall', 'sounds/fall.mp3');
+        game.run();
+        sound.play('music');
     });
 
     function randomInt(min, max) {
@@ -118,16 +155,31 @@ var game,
     }
 
     var generate = function(){
-        var b;
-        var y = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2);
+        var b,
+        d1 = Math.random(),
+        d2 = Math.random(),
+        d3 = Math.random(),
 
-        if(Math.random()<0.03){
+        y1 = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2),
+        y2 = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2);
+
+        if(d1<0.05){
             // b = factory();
             b = balloon.factory('balloons', balloon_frames);
-            game.layers.objects.add(b.sprite.move(0-game.layers.objects.x(), y).attr('class', 'balloon'));
+            game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
+        }
+
+        if(d2<0.15){
+            var buzz = balloon.factory('bolts', bolt_frames);
+            game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*2, y2).attr('class', 'bolt'));
         }
 
         game.layers.objects.select('.balloon').each(function(i, children){
+            var exit = stage.bbox().width - (children[i].x()+game.layers.objects.x()) < 0;
+            if(exit) children[i].remove();
+        });
+
+        game.layers.objects.select('.bolt').each(function(i, children){
             var exit = stage.bbox().width - (children[i].x()+game.layers.objects.x()) < 0;
             if(exit) children[i].remove();
         });
@@ -148,17 +200,26 @@ var game,
         if( control.pressed("A") ){
             dude.animate(game.frame);
         }
-        // console.log(game.layers.objects.select('.balloon'))
-        // game.layers.objects.select('.balloon').each(
-        //     function(i, elem){
-        //         // console.log(elem[i].parent());
-        //         // elem[i].animate(game.frame)
-        // });
+
         generate();
+
+        for(var i=0, l=game.cast.bolts.length; i<l; i++){
+            if(game.cast.bolts[i]!==undefined){
+                    game.cast.bolts[i].animate(game.frame);
+            }
+        }
+
         if(game.counter%20===0)
             for(var i=0, l=game.cast.balloons.length; i<l; i++){
-                game.cast.balloons[i].animate(game.frame);
+                if(game.cast.balloons[i]!==undefined){
+                        game.cast.balloons[i].animate(game.frame);
+                }
             }
+
+        game.score += 1;
+        digits = String(game.score).length;
+        digits = 10 - digits;
+        game.textbox.score.text('Score: ' + "0".repeat(digits) + game.score);
     };
 
     var tween = function(){
@@ -216,24 +277,64 @@ var game,
                 gravity.update();
             physics.vector.direction = 'S';
         }
-
         scroll();
+
+        for(var i=0, l=game.cast.balloons.length; i<l; i++){
+            if(game.cast.balloons[i]!==undefined){
+
+                if(player.collision(game.cast.balloons[i])){
+                    game.cast.balloons[i].sprite.remove();
+                    delete game.cast.balloons[i];
+                    sound.audio.burst.currentTime = 0;
+                    sound.play('burst');
+                    game.score += 100;
+                    digits = String(game.score).length;
+                    digits = 10 - digits;
+                    game.textbox.score.text('Score: ' + "0".repeat(digits) + game.score);
+                }
+            }
+        }
+        for(var i=0, l=game.cast.bolts.length; i<l; i++){
+            if(game.cast.bolts[i]!==undefined){
+                if(player.collision(game.cast.bolts[i])){
+                    gameover();
+                }
+            }
+        }
     };
 
 
     var scroll = function(){
-        game.layers.objects.dmove(PIX/2);
+        var items = game.layers.objects.children();
+        for(var i=0, l=items.length; i<l; i++){
+            items[i].dmove(PIX*0.75);
+        }
+        // game.layers.objects.dmove(PIX*0.75);
+
         if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width)
             player.move(PIX/2);
         if(player.position().x==game.bounds.right-player.sprite.bbox().width)
             game.started = true;
+
     };
+
+    var gameover = function(){
+        console.log("Game Over");
+        game.state = game.states.GAME_OVER;
+        sound.stop('music');
+        dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
+        dead.animate(300).dmove(0, -2*dead.bbox().height);
+        setTimeout(function(){dead.animate().dmove(0, game.bounds.bottom-player.sprite.y()+dead.bbox().height)}, 400);
+        player.sprite.opacity(0);
+        sound.play('fall');
+        setTimeout(function(){ sound.stop('fall'); }, 900);
+        setTimeout(function(){ sound.play('dead'); }, 1000);
+    };
+
+
 
     game.add(update, 'update');
     game.add(tween, 'tween');
-    game.run();
+
     window.game = game;
-
-
-
 });

@@ -99,7 +99,10 @@ function Controller(game){
     }
 
     this.pause = function(){
-        if(!this.game.PAUSED)
+        if(this.game.state!=this.game.states["RUNNING"]){
+            this.game.start();
+        }
+        else if(!this.game.PAUSED)
             this.game.pause();
         else
             this.game.run();
