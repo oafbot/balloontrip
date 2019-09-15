@@ -15,6 +15,7 @@ var game,
     dude,
     dead,
     stand,
+    electro,
     frame1,
     frame2,
     frame3,
@@ -27,7 +28,6 @@ var game,
     fish5,
     fish6,
     digits,
-    top,
     rank,
     stage,
     player,
@@ -39,6 +39,7 @@ var game,
     start,
 
     screen = SVG('screen').attr('id', 'game'),
+    top = top===undefined ? TOP : top;
 
     b = bitmap,
 
@@ -49,6 +50,7 @@ var game,
     dude5 = [b[39], b[40], b[41], b[42]],
     dude6 = [b[47], b[48], b[49], b[50]],
     dude7 = [b[51], b[52]],
+    dude8 = [b[53], b[54], b[55], b[56]],
 
     bal1 = [b[4],  b[5], b[6],  b[7]],
     bal2 = [b[12], b[5], b[13], b[7]],
@@ -63,6 +65,7 @@ var game,
     var palette2 = [null, '#9f9', '#06f', '#fff'];
     var palette3 = [null, '#06f', '#3cf', '#fff'];
     var palette4 = [null, '#f60', '#09f', '#9f9'];
+    var palette5 = [null, '#fc0', '#fff'];
 
     var init = function(){
         // var stage = screen.rect('100%', '60%');
@@ -95,7 +98,7 @@ var game,
             [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]]
         ];
 
-        bolt = new Sprite(game, palette, DIM, PIX);
+        bolt = new Sprite(game, palette2, DIM, PIX*0.75);
         bolt_frames = [
             [[ [b[23], b[24], b[25], b[26]], { x:0, y: 0} ]],
             [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
@@ -110,6 +113,13 @@ var game,
             game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
         }
 
+
+        // var title = function(){
+        //     var t = new Sprite(game, palette5, 32, PIX*2);
+        //     t.draw(alpha, {x:0,y:0});
+        // }
+
+        // title();
         // fish = new Sprite(game, palette4, DIM, PIX);
         // fish1 = fish.draw([b[53], b[54]], {x:100, y:100});
 
@@ -120,6 +130,8 @@ var game,
 
         dead = dude.draw(dude5, {x:0, y:0});
         dead.opacity(0);
+        electro = dude.draw(dude8, {x:0, y:0});
+        electro.opacity(0);
 
         stand = dude.group(dude.draw(dude6), dude.draw(dude7, {x:0, y:DIM*PIX*2}));
 
@@ -182,9 +194,10 @@ var game,
         game.display('rank', game.bounds.right-120, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.display('status', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         game.textbox.score.text("PLAYER: 0000000000");
-        game.textbox.top.text("TOP: 0000025000");
+        // game.textbox.top.text("TOP: 0000025000");
         game.textbox.rank.text("RANK: 50");
         game.textbox.status.text("PRESS SPACE");
+        game.textbox.top.text('TOP: ' + "0".repeat(10 - String(top).length) + top);
 
         game.start(function(){
             sound = new Sound(game);
@@ -222,7 +235,7 @@ var game,
         }
 
         if(d2<0.15){
-            var buzz = balloon.factory('bolts', bolt_frames);
+            var buzz = bolt.factory('bolts', bolt_frames);
             game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*2, y2).attr('class', 'bolt'));
         }
 
@@ -294,16 +307,17 @@ var game,
                 }
             }
             game.score += 10;
+
             if(game.score<TOP){
                 game.textbox.rank.text("RANK: " + Math.ceil(50-(game.score / (TOP / 50))));
             }
             else{
-                top = score;
+                top = game.score;
                 rank = 1;
                 game.textbox.rank.text("RANK: " + rank);
                 digits = String(game.score).length;
                 digits = 10 - digits;
-                game.textbox.score.text('TOP: ' + "0".repeat(digits) + game.score);
+                game.textbox.top.text('TOP: ' + "0".repeat(digits) + game.score);
             }
         }
 
@@ -430,10 +444,29 @@ var game,
         sound.playloop('buzz');
         dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
         player.sprite.opacity(0);
+        var buzzing = true;
+
+        var electrocute = function(){
+            if(Date.now()%2===0 && buzzing){
+                electro.move(dead.x(), dead.y())
+                dead.opacity(0);
+                electro.opacity(1);
+
+            }
+            else{
+                dead.opacity(1);
+                electro.opacity(0);
+            }
+
+            if(buzzing) requestAnimationFrame(electrocute);
+        }
+
         dead.animate(600).dmove(0, -2*dead.bbox().height);
+        requestAnimationFrame(electrocute);
 
         setTimeout(function(){
             sound.stop('buzz');
+            buzzing = false;
             dead.animate().dmove(0, game.bounds.bottom-player.sprite.y()+dead.bbox().height);
             setTimeout(function(){ sound.play('fall', 0.3); }, 200);
             setTimeout(function(){ sound.stop('fall'); }, 1200);
