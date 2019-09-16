@@ -15,7 +15,9 @@ function Game(screen){
         obstacles  : screen.group().attr('id', 'obstacles'),
         objects    : screen.group().attr('id', 'objects'),
         foreground : screen.group().attr('id', 'foreground'),
-        text       : screen.group().attr('id', 'text') };
+        text       : screen.group().attr('id', 'text'),
+        title      : screen.group().attr('id', 'title')
+    };
     this.cast = {};
     this.state = 0;
     this.funcs = {};

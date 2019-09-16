@@ -65,7 +65,7 @@ var game,
     var palette2 = [null, '#9f9', '#06f', '#fff'];
     var palette3 = [null, '#06f', '#3cf', '#fff'];
     var palette4 = [null, '#f60', '#09f', '#9f9'];
-    var palette5 = [null, '#fc0', '#fff'];
+    var palette5 = [null, '#f90', '#fff']; //fc0
 
     var init = function(){
         // var stage = screen.rect('100%', '60%');
@@ -114,12 +114,32 @@ var game,
         }
 
 
-        // var title = function(){
-        //     var t = new Sprite(game, palette5, 32, PIX*2);
-        //     t.draw(alpha, {x:0,y:0});
-        // }
-
-        // title();
+        var title = function(){
+            var x = 150;
+            var y = 100;
+            var pix = PIX;
+            var t40 = new Sprite(game, palette5, 40, pix);
+            var t32 = new Sprite(game, palette5, 32, pix);
+            var t24 = new Sprite(game, palette5, 24, pix);
+            var t16 = new Sprite(game, palette5, 16, pix);
+            game.layers.title.rect('100%','100%').fill('#000');
+            game.layers.title.add(t32.draw(alpha.b, {x:x, y:y}));
+            game.layers.title.add(t32.draw(alpha.a, {x:x+32*pix,  y:y}));
+            game.layers.title.add(t24.draw(alpha.l, {x:x+64*pix,  y:y}));
+            game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix,  y:y}));
+            game.layers.title.add(t32.draw(alpha.o, {x:x+112*pix, y:y}));
+            game.layers.title.add(t32.draw(alpha.o, {x:x+144*pix, y:y}));
+            game.layers.title.add(t40.draw(alpha.n, {x:x+176*pix, y:y}));
+            game.layers.title.add(t32.draw(alpha.f, {x:x+56*pix, y:y+48*pix}));
+            game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix, y:y+48*pix}));
+            game.layers.title.add(t16.draw(alpha.i, {x:x+112*pix, y:y+48*pix}));
+            game.layers.title.add(t32.draw(alpha.g, {x:x+128*pix, y:y+48*pix}));
+            game.layers.title.add(t32.draw(alpha.h, {x:x+160*pix, y:y+48*pix}));
+            game.layers.title.add(t32.draw(alpha.t, {x:x+192*pix, y:y+48*pix}));
+            game.layers.title.text("PRESS SPACE")
+                .move(screen.bbox().cx, y+256)
+                .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+        }
         // fish = new Sprite(game, palette4, DIM, PIX);
         // fish1 = fish.draw([b[53], b[54]], {x:100, y:100});
 
@@ -193,6 +213,7 @@ var game,
         game.display('top', screen.bbox().cx-80, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.display('rank', game.bounds.right-120, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.display('status', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+        game.display('start', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         game.textbox.score.text("PLAYER: 0000000000");
         // game.textbox.top.text("TOP: 0000025000");
         game.textbox.rank.text("RANK: 50");
@@ -200,17 +221,31 @@ var game,
         game.textbox.top.text('TOP: ' + "0".repeat(10 - String(top).length) + top);
 
         game.start(function(){
+            game.layers.title.opacity(0);
+            game.layers.title.remove();
+            delete game.layers.title;
+
             sound = new Sound(game);
-            sound.new('music', 'sounds/trip.mp3');
-            sound.new('burst', 'sounds/burst.mp3');
-            sound.new('pause', 'sounds/pause.mp3');
-            sound.new('dead', 'sounds/clear.mp3');
-            sound.new('flap', 'sounds/flap.mp3');
-            sound.new('fall', 'sounds/fall.mp3');
-            sound.new('buzz', 'sounds/buzz.wav');
-            game.run();
+            if(sound.audio.music===undefined)
+                sound.new('music', 'sounds/trip.mp3');
+            if(sound.audio.burst===undefined)
+                sound.new('burst', 'sounds/burst.mp3');
+            if(sound.audio.pause===undefined)
+                sound.new('pause', 'sounds/pause.mp3');
+            if(sound.audio.dead===undefined)
+                sound.new('dead', 'sounds/clear.mp3');
+            if(sound.audio.flap===undefined)
+                sound.new('flap', 'sounds/flap.mp3');
+            if(sound.audio.fall===undefined)
+                sound.new('fall', 'sounds/fall.mp3');
+            if(sound.audio.buzz===undefined)
+                sound.new('buzz', 'sounds/buzz.wav');
+
             sound.play('music', 0.5);
+            game.run();
         });
+
+        title();
     };
 
     var randomInt = function(min, max){
@@ -236,7 +271,7 @@ var game,
 
         if(d2<0.15){
             var buzz = bolt.factory('bolts', bolt_frames);
-            game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*2, y2).attr('class', 'bolt'));
+            game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4, y2).attr('class', 'bolt'));
         }
 
         if(d3<0.3){
@@ -252,6 +287,7 @@ var game,
                     }
                 }
                 children[c].remove();
+                delete children[c];
             }
         });
 
@@ -264,6 +300,7 @@ var game,
                     }
                 }
                 children[c].remove();
+                delete children[c];
             }
         });
     };
@@ -296,14 +333,14 @@ var game,
 
         for(var i=0, l=game.cast.bolts.length; i<l; i++){
             if(game.cast.bolts[i]!==undefined){
-                    game.cast.bolts[i].animate(game.frame);
+                game.cast.bolts[i].animate(game.frame);
             }
         }
 
         if(game.counter%20===0){
             for(var i=0, l=game.cast.balloons.length; i<l; i++){
                 if(game.cast.balloons[i]!==undefined){
-                        game.cast.balloons[i].animate(game.frame);
+                    game.cast.balloons[i].animate(game.frame);
                 }
             }
             game.score += 10;
@@ -356,7 +393,6 @@ var game,
 
         if( !physics.vector.bouncing && control.pressed("A") ){
             if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
-                // if(control.direction=="up")
                 physics.momentum = 0;
                 control.direction = "up";
                 physics.vector.direction = 'N';
@@ -365,7 +401,6 @@ var game,
             if(player.sprite.cy() < game.bounds.top){
                 physics.deflect(player.sprite);
             }else{
-                // player.move(0, gravity.lift);
                 gravity.float(DELAY);
             }
             gravity.grounded = false;
@@ -404,7 +439,6 @@ var game,
     var scroll = function(){
         var items = game.layers.objects.children();
         var background = game.layers.background.children();
-        // var foreground = game.layers.foreground.children();
 
         for(var i=0, l=items.length; i<l; i++){
             items[i].dmove(PIX*0.75);
@@ -414,10 +448,11 @@ var game,
             background[i].dmove(PIX*0.50);
             if(background[i].x()>=game.bounds.right){
                 background[i].remove();
-                // delete background[i];
+                delete background[i];
             }
         }
 
+        // var foreground = game.layers.foreground.children();
         // for(var i=0, l=foreground.length; i<l; i++){
         //     var exit = stage.bbox().width - (foreground[i].x()+game.layers.foreground.x()) < 0;
         //     if(exit)
