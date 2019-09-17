@@ -27,6 +27,7 @@ var game,
     fish4,
     fish5,
     fish6,
+    fishy,
     digits,
     rank,
     stage,
@@ -37,6 +38,10 @@ var game,
     bolt_frames,
     water,
     start,
+    waterline,
+    low_alt,
+    low_alt_timer = 0,
+    low_alt_duration = 0,
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -112,6 +117,7 @@ var game,
             var w = water.draw( [b[43], b[44], b[45], b[46]], { x:0, y:0} ).attr('class', 'water');
             game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
         }
+        waterline = stage.bbox().height-player.sprite.bbox().height*2
 
 
         var title = function(){
@@ -140,8 +146,15 @@ var game,
                 .move(screen.bbox().cx, y+256)
                 .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         }
-        // fish = new Sprite(game, palette4, DIM, PIX);
-        // fish1 = fish.draw([b[53], b[54]], {x:100, y:100});
+
+        fish = new Sprite(game, palette4, DIM, PIX);
+        fish1 = fish.draw([b[57], b[58], b[59], b[60]], {x:0, y:0}).opacity(0);
+        fish2 = fish.draw([b[61], b[62], b[63], b[64]], {x:0, y:0}).opacity(0);
+        fish3 = fish.draw([b[65], b[66], b[67], b[68], b[69], b[70]], {x:0, y:0}).opacity(0);
+        fish4 = fish.draw([b[71], b[72], b[73], b[74]], {x:0, y:0}).opacity(0);
+        fish5 = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
+        fish6 = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
+        fishy = fish.add(fish1, fish2, fish3, fish4, fish5, fish6);
 
         dude.frames[0].opacity(0);
         dude.frames[1].opacity(0);
@@ -203,7 +216,7 @@ var game,
             else{
                 sound.audio.pause.currTime = 0;
                 sound.play('pause');
-                setTimeout(function(){sound.play('music', 0.5);}, 500);
+                setTimeout(function(){sound.playloop('music', 0.5);}, 500);
                 game.textbox.status.text("");
                 this.game.run();
             }
@@ -215,9 +228,8 @@ var game,
         game.display('status', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         game.display('start', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         game.textbox.score.text("PLAYER: 0000000000");
-        // game.textbox.top.text("TOP: 0000025000");
         game.textbox.rank.text("RANK: 50");
-        game.textbox.status.text("PRESS SPACE");
+        // game.textbox.status.text("PRESS SPACE");
         game.textbox.top.text('TOP: ' + "0".repeat(10 - String(top).length) + top);
 
         game.start(function(){
@@ -240,8 +252,10 @@ var game,
                 sound.new('fall', 'sounds/fall.mp3');
             if(sound.audio.buzz===undefined)
                 sound.new('buzz', 'sounds/buzz.wav');
+            if(sound.audio.splash===undefined)
+                sound.new('splash', 'sounds/splash.wav');
 
-            sound.play('music', 0.5);
+            sound.playloop('music', 0.5);
             game.run();
         });
 
@@ -260,18 +274,34 @@ var game,
         d2 = Math.random(),
         d3 = Math.random(),
 
-        y1 = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2),
-        y2 = randomInt(player.sprite.bbox().height, stage.bbox().height - player.sprite.bbox().height*2),
+        y1 = randomInt(player.sprite.bbox().height, waterline),
+        y2 = randomInt(player.sprite.bbox().height/2, waterline + player.sprite.bbox().height),
         y3 = randomInt(0, stage.bbox().height/* - player.sprite.bbox().height*/);
 
         if(d1<0.05){
             b = balloon.factory('balloons', balloon_frames);
             game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
+
+            for(var i=0, l=game.cast.bolts.length; i<l; i++){
+                if(game.cast.bolts[i]!==undefined){
+                    if(b.collision(game.cast.bolts[i]))
+                        b.sprite.dmove(-game.cast.bolts[i].sprite.bbox().width*2, 0)
+                }
+            }
         }
 
         if(d2<0.15){
             var buzz = bolt.factory('bolts', bolt_frames);
             game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4, y2).attr('class', 'bolt'));
+
+            // for(var i=0, l=game.cast.balloons.length; i<l; i++){
+            //     if(game.cast.balloons[i]!==undefined){
+            //         if(buzz.collision(game.cast.balloons[i])){
+            //             console.log("overlap")
+            //             buzz.sprite.dmove(-game.cast.balloons[i].sprite.bbox().width*2, 0)
+            //         }
+            //     }
+            // }
         }
 
         if(d3<0.3){
@@ -361,6 +391,22 @@ var game,
         digits = String(game.score).length;
         digits = 10 - digits;
         game.textbox.score.text('PLAYER: ' + "0".repeat(digits) + game.score);
+
+        if(player.sprite.y() >= waterline-DIM*PIX){
+            low_alt = true;
+            low_alt_timer = low_alt_timer===0 ? Date.now() : low_alt_timer
+            low_alt_duration = Date.now() - low_alt_timer;
+        }
+        else{
+            low_alt = false;
+            low_alt_timer = 0;
+            low_alt_duration = 0;
+        }
+
+        if(low_alt_duration>1500){
+            eaten();
+        }
+
     };
 
     var tween = function(){
@@ -511,6 +557,58 @@ var game,
             }, 1200);
         }, 800);
     };
+
+    var custom = function(f){
+        // requestAnimationFrame(function(){});
+        if(game.frame%2===0){
+            if(fishy.frame<fishy.frames.length)
+                fishy.frame++;
+
+            if(fishy.frame===0)
+                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+            else if(fishy.frame==1)
+                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+            else if(fishy.frame==2)
+                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+            else if(fishy.frame==3)
+                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+            else if(fishy.frame==4)
+                fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+            else if(fishy.frame==5)
+                fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+        }
+    };
+
+    var eaten = function(){
+        if(game.state!="end loop"){
+            sound.stop('music');
+            sound.play('splash');
+            game.state = game.states.END_LOOP;
+            dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height).opacity(1);
+            player.sprite.opacity(0);
+        }
+
+        fishy.animate(fishy.frame, custom);
+
+        if(fishy.frame==4){
+            dead.opacity(0);
+            dead.remove();
+        }
+
+        if(fishy.frame>=fishy.frames.length){
+            sound.play('dead', 0.4);
+            game.state = game.states.GAME_OVER;
+            game.textbox.status.text("GAME OVER");
+        }
+
+        // setTimeout(function(){
+        //     setTimeout(function(){
+        //         sound.play('dead', 0.4);
+        //         game.state = game.states.GAME_OVER;
+        //         game.textbox.status.text("GAME OVER");
+        //     }, 500);
+        // }, 1000);
+    }
 
     var reset = function(){
         for(var i in game.layers){

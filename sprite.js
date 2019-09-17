@@ -8,14 +8,15 @@ function Sprite(game, palette, dim, pix){
     this.dim = dim;
     this.pix = pix;
     this.palette = palette;
+    this.frame = 0;
 
     // this.init = function(){}
 
-    this.draw = function(bitmap, offset){
+    this.draw = function(bitmap, offset, cols){
         var q, ql, i, l, row, mod,
 
+        cols = cols===undefined ? 2 : cols,
         frame = game.screen.group();
-
         offset = offset === undefined ? {x : 0, y : 0} : offset;
 
         for(q=0, ql=bitmap.length; q<ql; q++){
@@ -35,6 +36,10 @@ function Sprite(game, palette, dim, pix){
                     loc[0] = dim * pix;
                     loc[1] = dim * pix;
                     break;
+                default:
+                    loc[0] = (dim * pix) * (q%cols);
+                    loc[1] = (dim * pix) * (q-(q%4)-2);
+                    console.log(loc)
             }
 
             for(i=0, l=bitmap[q].length; i<l; i++){
@@ -49,13 +54,15 @@ function Sprite(game, palette, dim, pix){
         return frame;
     }
 
-    this.animate = function(f){
+    this.animate = function(f, fn){
         for(var i=0, l=this.frames.length; i<l; i++){
             if(i===f)
                 this.frames[i].opacity(1);
             else
                 this.frames[i].opacity(0);
         }
+        if(fn!==undefined)
+            fn(f);
     }
 
     this.group = function(sprite1, sprite2){

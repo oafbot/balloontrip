@@ -27,6 +27,7 @@ function Game(screen){
         "START"     : "start",
         "RUNNING"   : "running",
         "PAUSED"    : "paused",
+        "END_LOOP"  : "end loop",
         "GAME_OVER" : "game over"
     };
 
