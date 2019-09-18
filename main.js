@@ -42,6 +42,7 @@ var game,
     low_alt,
     low_alt_timer = 0,
     low_alt_duration = 0,
+    distance = 0,
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -60,11 +61,8 @@ var game,
     bal1 = [b[4],  b[5], b[6],  b[7]],
     bal2 = [b[12], b[5], b[13], b[7]],
     bal3 = [b[15], b[16], b[17], b[18]],
-    bal4 = [b[19], b[20]];
+    bal4 = [b[19], b[20]],
     bal5 = [b[21], b[22]];
-
-    // fish1 = [b[52], b[53]]
-
 
     var palette  = [null, '#f06', '#06f', '#fc9'];
     var palette2 = [null, '#9f9', '#06f', '#fff'];
@@ -118,7 +116,6 @@ var game,
             game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
         }
         waterline = stage.bbox().height-player.sprite.bbox().height*2
-
 
         var title = function(){
             var x = 150;
@@ -273,6 +270,7 @@ var game,
         d1 = Math.random(),
         d2 = Math.random(),
         d3 = Math.random(),
+        d4 = Math.random(),
 
         y1 = randomInt(player.sprite.bbox().height, waterline),
         y2 = randomInt(player.sprite.bbox().height/2, waterline + player.sprite.bbox().height),
@@ -291,8 +289,39 @@ var game,
         }
 
         if(d2<0.15){
-            var buzz = bolt.factory('bolts', bolt_frames);
-            game.layers.objects.add(buzz.sprite.move(stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4, y2).attr('class', 'bolt'));
+            var cl= 'bolt',
+                buzz = bolt.factory('bolts', bolt_frames),
+                x = stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4;
+
+            // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
+
+            if(distance>200 && d4<0.3){
+                switch(randomInt(0,4)){
+                    case 0:
+                        cl = "bolt N";
+                        y2 = game.bounds.bottom;
+                        break;
+                    case 1:
+                        cl = "bolt S";
+                        y2 = game.bounds.top;
+                        break;
+                    case 2:
+                        cl = "bolt NE";
+                        y2 = game.bounds.bottom;
+                        break;
+                    case 3:
+                        cl = "bolt SE";
+                        y2 = game.bounds.top;
+                        break;
+                    case 3:
+                        cl = "bolt E";
+                        break;
+                }
+                // buzz = bolt.factory('bolts', bolt_frames);
+                // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
+            }
+
+            game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
 
             // for(var i=0, l=game.cast.balloons.length; i<l; i++){
             //     if(game.cast.balloons[i]!==undefined){
@@ -323,7 +352,9 @@ var game,
 
         game.layers.objects.select('.bolt').each(function(c, children){
             var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
-            if(exit){
+            var exitN = children[c].y() < 0;
+            var exitS = stage.bbox().height - (children[c].y()+game.layers.objects.y()) < 0;
+            if(exit || exitN || exitS){
                 for(var i=0, l=game.cast.bolts.length; i<l; i++){
                     if(game.cast.bolts[i]!==undefined && game.cast.bolts[i].sprite===children[c]){
                         delete game.cast.bolts[i]
@@ -374,6 +405,7 @@ var game,
                 }
             }
             game.score += 10;
+            distance += 10;
 
             if(game.score<TOP){
                 game.textbox.rank.text("RANK: " + Math.ceil(50-(game.score / (TOP / 50))));
@@ -407,6 +439,9 @@ var game,
             eaten();
         }
 
+        // if(distance>350){
+
+        // }
     };
 
     var tween = function(){
@@ -487,7 +522,31 @@ var game,
         var background = game.layers.background.children();
 
         for(var i=0, l=items.length; i<l; i++){
-            items[i].dmove(PIX*0.75);
+            var type = items[i].classes();
+            var index = type.indexOf("bolt");
+            if(type.length>1 && index>-1){
+                type.splice(index, 1);
+                switch(type[0]){
+                    case "N":
+                        items[i].dmove(PIX*0.75, -PIX*0.75);
+                        break;
+                    case "NE":
+                        items[i].dmove(PIX*1.25, -PIX*0.75);
+                        break;
+                    case "E":
+                        items[i].dmove(PIX*1.25, 0);
+                        break;
+                    case "SE":
+                        items[i].dmove(PIX*1.25, PIX*0.75);
+                        break;
+                    case "S":
+                        items[i].dmove(PIX*0.75, PIX*0.75);
+                        break;
+                }
+            }
+            else{
+                items[i].dmove(PIX*0.75);
+            }
         }
 
         for(var i=0, l=background.length; i<l; i++){

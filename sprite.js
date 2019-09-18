@@ -39,7 +39,6 @@ function Sprite(game, palette, dim, pix){
                 default:
                     loc[0] = (dim * pix) * (q%cols);
                     loc[1] = (dim * pix) * (q-(q%4)-2);
-                    console.log(loc)
             }
 
             for(i=0, l=bitmap[q].length; i<l; i++){
