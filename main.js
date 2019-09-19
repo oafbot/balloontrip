@@ -1,11 +1,9 @@
-SVG.on(document, 'DOMContentLoaded', function() {
-
+SVG.on(document, 'DOMContentLoaded', function(){
 const PIX = 2;
 const DIM = 8;
 const GRAVITY = 0.12;
-const DELAY = 500;
+const DELAY = 350;
 const TOP = 25000;
-
 
 var game,
     physics,
@@ -62,13 +60,13 @@ var game,
     bal2 = [b[12], b[5], b[13], b[7]],
     bal3 = [b[15], b[16], b[17], b[18]],
     bal4 = [b[19], b[20]],
-    bal5 = [b[21], b[22]];
+    bal5 = [b[21], b[22]],
 
-    var palette  = [null, '#f06', '#06f', '#fc9'];
-    var palette2 = [null, '#9f9', '#06f', '#fff'];
-    var palette3 = [null, '#06f', '#3cf', '#fff'];
-    var palette4 = [null, '#f60', '#09f', '#9f9'];
-    var palette5 = [null, '#f90', '#fff']; //fc0
+    palette  = [null, '#f06', '#06f', '#fc9'],
+    palette2 = [null, '#9f9', '#06f', '#fff'],
+    palette3 = [null, '#06f', '#3cf', '#fff'],
+    palette4 = [null, '#f60', '#09f', '#9f9'],
+    palette5 = [null, '#f90', '#fff'];
 
     var init = function(){
         // var stage = screen.rect('100%', '60%');
@@ -178,11 +176,10 @@ var game,
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
-        physics.speedRange(PIX, PIX*3);
+        physics.speedRange(PIX, PIX*1.5);
 
         control = new Controller(game);
         control.init();
-        // screen.transform({scale:1.2})
 
         control.set("left",  function(){
             physics.momentum = physics.basespeed;
@@ -254,6 +251,7 @@ var game,
             if(sound.audio.splash===undefined)
                 sound.new('splash', 'sounds/splash.wav');
 
+            set_course();
             sound.playloop('music', 0.5);
             game.run();
         });
@@ -261,14 +259,42 @@ var game,
         title();
     };
 
+    var set_course = function(){
+        var i, l, buzz, bal, locs, x = 300, y = 100, w = DIM*2;
+
+        locs = [
+            {x:x, y:y},{x:x+w, y:y+w}, {x:x+w*2, y:y+w*2},
+            {x:x-w*16, y:y}, {x:x-w*17, y:y}, {x:x-w*18, y:y+w},
+            {x:x-w*8, y:y+w*3}, {x:x-w*9, y:y+w*4}, {x:x-w*10, y:y+w*5},
+            {x:x-w*8, y:y+w*12}, {x:x-w*9, y:y+w*13}, {x:x-w*10, y:y+w*14}, {x:x-w*11, y:y+w*14},
+            {x:x-w*7, y:y+w*20}, {x:x-w*6, y:y+w*20}, {x:x-w*5, y:y+w*20}, {x:x-w*4, y:y+w*20}, {x:x-w*3, y:y+w*19}, {x:x-w*2, y:y+w*18}, {x:x-w, y:y+w*18}
+        ];
+
+        for(i=0, l=locs.length; i<l; i++){
+            buzz = bolt.factory('bolts', bolt_frames);
+            game.layers.objects.add(buzz.sprite.move(locs[i].x, locs[i].y).addClass('bolt'));
+        }
+
+        locs = [{x:x-4*w, y:y-2*w}, {x:x-w*15, y:y+w*3}, {x:x-w*15, y:y+w*16}, {x:x-4*w, y:y+w*13}];
+
+        for(i=0, l=locs.length; i<l; i++){
+            bal = balloon.factory('balloons', balloon_frames);
+            game.layers.objects.add(bal.sprite.move(locs[i].x, locs[i].y).addClass('balloon'));
+        }
+
+    };
+
     var randomInt = function(min, max){
+        // The maximum is exclusive and the minimum is inclusive
         min = Math.ceil(min);
         max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+        return Math.floor(Math.random() * (max - min)) + min;
     }
 
     var generate = function(){
         var b,
+        total = game.cast.bolts.length + game.cast.balloons.length;
+        more = distance>50/* && total<20*/,
         d1 = Math.random(),
         d2 = Math.random(),
         d3 = Math.random(),
@@ -278,56 +304,58 @@ var game,
         y2 = randomInt(player.sprite.bbox().height/2, waterline + player.sprite.bbox().height),
         y3 = randomInt(0, stage.bbox().height);
 
-        if(d1<0.05){
-            b = balloon.factory('balloons', balloon_frames);
-            game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
+        if(more){
+            if(d1<0.05){
+                b = balloon.factory('balloons', balloon_frames);
+                game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
 
-            for(var i=0, l=game.cast.bolts.length; i<l; i++){
-                if(game.cast.bolts[i]!==undefined){
-                    if(b.collision(game.cast.bolts[i]))
-                        b.sprite.dmove(-game.cast.bolts[i].sprite.bbox().width*2, 0)
+                for(var i=0, l=game.cast.bolts.length; i<l; i++){
+                    if(game.cast.bolts[i]!==undefined){
+                        if(b.collision(game.cast.bolts[i]))
+                            b.sprite.dmove(-game.cast.bolts[i].sprite.bbox().width*2, 0)
+                    }
                 }
             }
-        }
 
-        if(d2<0.15){
-            var cl= 'bolt',
-                buzz = bolt.factory('bolts', bolt_frames),
-                x = stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4;
+            if(d2<0.15){
+                var cl= 'bolt',
+                    buzz = bolt.factory('bolts', bolt_frames),
+                    x = stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4;
 
-            // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
-
-            if(distance>200 && d4<0.3){
-                switch(randomInt(0,4)){
-                    case 0:
-                        cl = "bolt N";
-                        y2 = game.bounds.bottom;
-                        break;
-                    case 1:
-                        cl = "bolt S";
-                        y2 = game.bounds.top;
-                        break;
-                    case 2:
-                        cl = "bolt NE";
-                        y2 = game.bounds.bottom;
-                        break;
-                    case 3:
-                        cl = "bolt SE";
-                        y2 = game.bounds.top;
-                        break;
-                    case 3:
-                        cl = "bolt E";
-                        break;
-                }
-                // buzz = bolt.factory('bolts', bolt_frames);
                 // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
+
+                if(distance>200 && d4<0.3){
+                    switch(randomInt(0,4)){
+                        case 0:
+                            cl = "bolt N";
+                            y2 = game.bounds.bottom;
+                            break;
+                        case 1:
+                            cl = "bolt S";
+                            y2 = game.bounds.top;
+                            break;
+                        case 2:
+                            cl = "bolt NE";
+                            y2 = game.bounds.bottom;
+                            break;
+                        case 3:
+                            cl = "bolt SE";
+                            y2 = game.bounds.top;
+                            break;
+                        case 3:
+                            cl = "bolt E";
+                            break;
+                    }
+                    // buzz = bolt.factory('bolts', bolt_frames);
+                    // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
+                }
+
+                game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
             }
 
-            game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
-        }
-
-        if(d3<0.3){
-            var star = game.layers.background.rect(1,1).move(0, y3).fill('#06f').attr('class', 'star');
+            if(d3<0.3){
+                var star = game.layers.background.rect(1,1).move(0, y3).fill('#06f').attr('class', 'star');
+            }
         }
 
         game.layers.objects.select('.balloon').each(function(c, children){
@@ -359,13 +387,17 @@ var game,
 
     var update = function(){
         if( control.pressed("RIGHT") ){
-            if(control.direction=="right" && game.counter%100===0)
-                physics.accelerate(PIX/2);
+            if(control.direction=="right" && game.counter%40===0)
+                physics.accelerate(PIX*1.5);
+            else if(control.direction=="left")
+                physics.momentum = 0;
         }
 
         if( control.pressed("LEFT") ){
-            if(control.direction=="left" && game.counter%100===0)
+            if(control.direction=="left" && game.counter%40===0)
                 physics.accelerate(PIX/2);
+            else if(control.direction=="right")
+                physics.momentum = 0;
         }
 
         if( control.pressed("A") ){
@@ -509,6 +541,9 @@ var game,
                     }
                 }
             }
+
+        if(control.pressed("A"))
+            gravity.float(DELAY);
     };
 
     var cleanup = function(items){
@@ -556,15 +591,6 @@ var game,
                 delete background[i];
             }
         }
-
-        // var foreground = game.layers.foreground.children();
-        // for(var i=0, l=foreground.length; i<l; i++){
-        //     var exit = stage.bbox().width - (foreground[i].x()+game.layers.foreground.x()) < 0;
-        //     if(exit)
-        //         foreground[i].move(0);
-        //     else
-        //         foreground[i].dmove(PIX*0.75);
-        // }
 
         if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
             stand.dmove(PIX/2);
@@ -621,23 +647,21 @@ var game,
 
     var fish_animation = function(f){
         // requestAnimationFrame(function(){});
-        // if(game.frame%2===0){
-            if(fishy.frame<fishy.frames.length)
-                fishy.frame++;
+        if(fishy.frame<fishy.frames.length)
+            fishy.frame++;
 
-            if(fishy.frame===0)
-                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-            else if(fishy.frame==1)
-                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-            else if(fishy.frame==2)
-                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-            else if(fishy.frame==3)
-                fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-            else if(fishy.frame==4)
-                fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
-            else if(fishy.frame==5)
-                fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
-        // }
+        if(fishy.frame===0)
+            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+        else if(fishy.frame==1)
+            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+        else if(fishy.frame==2)
+            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+        else if(fishy.frame==3)
+            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+        else if(fishy.frame==4)
+            fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+        else if(fishy.frame==5)
+            fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
     };
 
     var eaten = function(){

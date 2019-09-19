@@ -21,7 +21,7 @@ Sound = function(){
     };
 
     this.new = function(name, src){
-        sound = context.createBufferSource();
+        // sound = context.createBufferSource();
         this.audio[name] = new Audio(src);
     }
 
