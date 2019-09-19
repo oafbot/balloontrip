@@ -43,6 +43,7 @@ var game,
     low_alt_timer = 0,
     low_alt_duration = 0,
     distance = 0,
+    fish_attack,
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -154,6 +155,7 @@ var game,
         fish5 = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
         fish6 = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
         fishy = fish.add(fish1, fish2, fish3, fish4, fish5, fish6);
+        fish_attack = false;
 
         dude.frames[0].opacity(0);
         dude.frames[1].opacity(0);
@@ -335,10 +337,12 @@ var game,
                 for(var i=0, l=game.cast.balloons.length; i<l; i++){
                     if(game.cast.balloons[i]!==undefined && game.cast.balloons[i].sprite===children[c]){
                         delete game.cast.balloons[i]
+                        // game.cast.balloons.splice(i, 1);
                     }
                 }
                 children[c].remove();
                 delete children[c];
+                // cleanup(game.cast.balloons);
             }
         });
 
@@ -354,6 +358,7 @@ var game,
                 }
                 children[c].remove();
                 delete children[c];
+                // cleanup(game.cast.bolts);
             }
         });
     };
@@ -495,14 +500,27 @@ var game,
                 }
             }
         }
-        for(var i=0, l=game.cast.bolts.length; i<l; i++){
-            if(game.cast.bolts[i]!==undefined){
-                if(player.collision(game.cast.bolts[i])){
-                    gameover();
+
+        cleanup(game.cast.balloons);
+
+        if(!fish_attack)
+            for(var i=0, l=game.cast.bolts.length; i<l; i++){
+                if(game.cast.bolts[i]!==undefined){
+                    if(player.collision(game.cast.bolts[i])){
+                        gameover();
+                    }
                 }
             }
-        }
     };
+
+    var cleanup = function(items){
+        for(var i=0, l=items.length; i<l; i++){
+            if(items[i]===undefined){
+                items.splice(i, 1);
+                console.log("cleanup")
+            }
+        }
+    }
 
     var scroll = function(){
         var items = game.layers.objects.children();
@@ -562,6 +580,9 @@ var game,
             stand.opacity(0);
             dude.animate(game.frame);
         }
+
+        cleanup(game.cast.balloons);
+        cleanup(game.cast.bolts);
     };
 
     var gameover = function(){
@@ -603,9 +624,9 @@ var game,
         }, 800);
     };
 
-    var custom = function(f){
+    var fish_animation = function(f){
         // requestAnimationFrame(function(){});
-        if(game.frame%2===0){
+        // if(game.frame%2===0){
             if(fishy.frame<fishy.frames.length)
                 fishy.frame++;
 
@@ -621,10 +642,12 @@ var game,
                 fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
             else if(fishy.frame==5)
                 fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
-        }
+        // }
     };
 
     var eaten = function(){
+        fish_attack = true;
+
         if(game.state!="end loop"){
             sound.stop('music');
             sound.play('splash');
@@ -633,7 +656,7 @@ var game,
             player.sprite.opacity(0);
         }
 
-        fishy.animate(fishy.frame, custom);
+        fishy.animate(fishy.frame, fish_animation);
 
         if(fishy.frame==4){
             dead.opacity(0);
