@@ -43,7 +43,6 @@ var game,
     low_alt_timer = 0,
     low_alt_duration = 0,
     distance = 0,
-    fish_attack,
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -82,6 +81,7 @@ var game,
         game.cast.balloons = [];
         game.cast.bolts    = [];
         game.score = 0;
+        game.states.FISH_ATTACK = "fish attack";
 
         dude = new Sprite(game, palette, DIM, PIX);
 
@@ -155,7 +155,6 @@ var game,
         fish5 = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
         fish6 = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
         fishy = fish.add(fish1, fish2, fish3, fish4, fish5, fish6);
-        fish_attack = false;
 
         dude.frames[0].opacity(0);
         dude.frames[1].opacity(0);
@@ -374,8 +373,9 @@ var game,
                 stand.opacity(0);
 
             dude.animate(game.frame);
-            // sound.audio.flap.currentTime = 0;
+
             if(game.counter%10===0){
+                sound.audio.flap.currentTime = 0;
                 sound.play('flap');
                 setTimeout(function(){try{sound.stop('flap')}catch(e){console.log('whatever')}}, 600);
             }
@@ -484,10 +484,12 @@ var game,
             if(game.cast.balloons[i]!==undefined){
 
                 if(player.collision(game.cast.balloons[i])){
-                    game.cast.balloons[i].sprite.remove();
-                    delete game.cast.balloons[i];
                     sound.audio.burst.currentTime = 0;
                     sound.play('burst');
+
+                    game.cast.balloons[i].sprite.remove();
+                    delete game.cast.balloons[i];
+
                     game.score += 300;
                     digits = String(game.score).length;
                     digits = 10 - digits;
@@ -499,7 +501,7 @@ var game,
         cleanup(game.cast.balloons);
         cleanup(game.cast.bolts);
 
-        if(!fish_attack)
+        if(game.state!=game.states.FISH_ATTACK)
             for(var i=0, l=game.cast.bolts.length; i<l; i++){
                 if(game.cast.bolts[i]!==undefined){
                     if(player.collision(game.cast.bolts[i])){
@@ -639,7 +641,7 @@ var game,
     };
 
     var eaten = function(){
-        fish_attack = true;
+        game.state = game.states.FISH_ATTACK;
 
         if(game.state!="end loop"){
             sound.stop('music');

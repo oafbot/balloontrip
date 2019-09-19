@@ -1,4 +1,7 @@
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+
 Sound = function(){
+    const context = new AudioContext();
     this.audio = [];
 
     this.play = function(name, vol){
@@ -18,6 +21,7 @@ Sound = function(){
     };
 
     this.new = function(name, src){
+        sound = context.createBufferSource();
         this.audio[name] = new Audio(src);
     }
 
