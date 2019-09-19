@@ -110,7 +110,6 @@ var game,
         ];
 
         water = new Sprite(game, palette3, DIM, PIX);
-        // var water_frames = [[ [[b[43]], { x:0, y:0 }] ]];
         for(var i=0, l=game.bounds.right; i<l-DIM*PIX; i+=DIM*PIX){
             var w = water.draw( [b[43], b[44], b[45], b[46]], { x:0, y:0} ).attr('class', 'water');
             game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
@@ -140,7 +139,10 @@ var game,
             game.layers.title.add(t32.draw(alpha.h, {x:x+160*pix, y:y+48*pix}));
             game.layers.title.add(t32.draw(alpha.t, {x:x+192*pix, y:y+48*pix}));
             game.layers.title.text("PRESS SPACE")
-                .move(screen.bbox().cx, y+256)
+            .move(screen.bbox().cx, y+256)
+                .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+            game.layers.title.text("©2019  PRETENDO")
+                .move(screen.bbox().cx, y+310)
                 .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         }
 
@@ -226,7 +228,6 @@ var game,
         game.display('start', screen.bbox().cx, screen.bbox().cy, {'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
         game.textbox.score.text("PLAYER: 0000000000");
         game.textbox.rank.text("RANK: 50");
-        // game.textbox.status.text("PRESS SPACE");
         game.textbox.top.text('TOP: ' + "0".repeat(10 - String(top).length) + top);
 
         game.start(function(){
@@ -274,7 +275,7 @@ var game,
 
         y1 = randomInt(player.sprite.bbox().height, waterline),
         y2 = randomInt(player.sprite.bbox().height/2, waterline + player.sprite.bbox().height),
-        y3 = randomInt(0, stage.bbox().height/* - player.sprite.bbox().height*/);
+        y3 = randomInt(0, stage.bbox().height);
 
         if(d1<0.05){
             b = balloon.factory('balloons', balloon_frames);
@@ -322,15 +323,6 @@ var game,
             }
 
             game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
-
-            // for(var i=0, l=game.cast.balloons.length; i<l; i++){
-            //     if(game.cast.balloons[i]!==undefined){
-            //         if(buzz.collision(game.cast.balloons[i])){
-            //             console.log("overlap")
-            //             buzz.sprite.dmove(-game.cast.balloons[i].sprite.bbox().width*2, 0)
-            //         }
-            //     }
-            // }
         }
 
         if(d3<0.3){
@@ -367,7 +359,6 @@ var game,
     };
 
     var update = function(){
-        // console.log(control.direction)
         if( control.pressed("RIGHT") ){
             if(control.direction=="right" && game.counter%100===0)
                 physics.accelerate(PIX/2);
@@ -438,10 +429,6 @@ var game,
         if(low_alt_duration>1500){
             eaten();
         }
-
-        // if(distance>350){
-
-        // }
     };
 
     var tween = function(){
@@ -578,7 +565,6 @@ var game,
     };
 
     var gameover = function(){
-        // console.log("Game Over");
         game.state = game.states.GAME_OVER;
         sound.stop('music');
         sound.playloop('buzz');
@@ -659,14 +645,6 @@ var game,
             game.state = game.states.GAME_OVER;
             game.textbox.status.text("GAME OVER");
         }
-
-        // setTimeout(function(){
-        //     setTimeout(function(){
-        //         sound.play('dead', 0.4);
-        //         game.state = game.states.GAME_OVER;
-        //         game.textbox.status.text("GAME OVER");
-        //     }, 500);
-        // }, 1000);
     }
 
     var reset = function(){
