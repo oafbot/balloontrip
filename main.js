@@ -335,14 +335,11 @@ var game,
             var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
             if(exit){
                 for(var i=0, l=game.cast.balloons.length; i<l; i++){
-                    if(game.cast.balloons[i]!==undefined && game.cast.balloons[i].sprite===children[c]){
+                    if(game.cast.balloons[i]!==undefined && game.cast.balloons[i].sprite===children[c])
                         delete game.cast.balloons[i]
-                        // game.cast.balloons.splice(i, 1);
-                    }
                 }
                 children[c].remove();
                 delete children[c];
-                // cleanup(game.cast.balloons);
             }
         });
 
@@ -352,13 +349,11 @@ var game,
             var exitS = stage.bbox().height - (children[c].y()+game.layers.objects.y()) < 0;
             if(exit || exitN || exitS){
                 for(var i=0, l=game.cast.bolts.length; i<l; i++){
-                    if(game.cast.bolts[i]!==undefined && game.cast.bolts[i].sprite===children[c]){
+                    if(game.cast.bolts[i]!==undefined && game.cast.bolts[i].sprite===children[c])
                         delete game.cast.bolts[i]
-                    }
                 }
                 children[c].remove();
                 delete children[c];
-                // cleanup(game.cast.bolts);
             }
         });
     };
@@ -502,6 +497,7 @@ var game,
         }
 
         cleanup(game.cast.balloons);
+        cleanup(game.cast.bolts);
 
         if(!fish_attack)
             for(var i=0, l=game.cast.bolts.length; i<l; i++){
@@ -514,12 +510,9 @@ var game,
     };
 
     var cleanup = function(items){
-        for(var i=0, l=items.length; i<l; i++){
-            if(items[i]===undefined){
+        for(var i=0, l=items.length; i<l; i++)
+            if(items[i]===undefined)
                 items.splice(i, 1);
-                console.log("cleanup")
-            }
-        }
     }
 
     var scroll = function(){
@@ -581,8 +574,8 @@ var game,
             dude.animate(game.frame);
         }
 
-        cleanup(game.cast.balloons);
-        cleanup(game.cast.bolts);
+        // cleanup(game.cast.balloons);
+        // cleanup(game.cast.bolts);
     };
 
     var gameover = function(){
