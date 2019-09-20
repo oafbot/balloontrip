@@ -400,7 +400,9 @@ var game,
                 physics.accelerate(PIX*1.5);
             else if(control.direction=="left")
                 physics.momentum = 0;
-            // player.direction = 'right';
+
+            if(!control.pressed("A"))
+                dude.animate(game.frame);
         }
 
         if( control.pressed("LEFT") ){
@@ -408,7 +410,9 @@ var game,
                 physics.accelerate(PIX/2);
             else if(control.direction=="right")
                 physics.momentum = 0;
-            // player.direction = 'left';
+
+            if(!control.pressed("A"))
+                dude.animate(game.frame);
         }
 
         if( control.pressed("A") ){
