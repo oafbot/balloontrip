@@ -9,15 +9,20 @@ function Sprite(game, palette, dim, pix){
     this.pix = pix;
     this.palette = palette;
     this.frame = 0;
-
+    this.direction = undefined;
+    this.directions = {};
     // this.init = function(){}
 
-    this.draw = function(bitmap, offset, cols){
+    this.draw = function(bitmap, offset, cols, flip){
         var q, ql, i, l, row, mod,
 
         cols = cols===undefined ? 2 : cols,
+        flip = flip===undefined ? false : true,
         frame = game.screen.group();
         offset = offset === undefined ? {x : 0, y : 0} : offset;
+
+        if(flip)
+            bitmap = this.flipbits(bitmap);
 
         for(q=0, ql=bitmap.length; q<ql; q++){
             switch(q){
@@ -54,11 +59,13 @@ function Sprite(game, palette, dim, pix){
     }
 
     this.animate = function(f, fn){
-        for(var i=0, l=this.frames.length; i<l; i++){
+        var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
+
+        for(var i=0, l=frames.length; i<l; i++){
             if(i===f)
-                this.frames[i].opacity(1);
+                frames[i].opacity(1);
             else
-                this.frames[i].opacity(0);
+                frames[i].opacity(0);
         }
         if(fn!==undefined)
             fn(f);
@@ -79,6 +86,16 @@ function Sprite(game, palette, dim, pix){
         }
         return this;
     }
+
+    this.define = function(direction, frames){
+        this.directions[direction] = [];
+        var group = this.box;
+        for(var i=0, l=frames.length; i<l; i++){
+            group.add(frames[i]);
+            this.directions[direction].push(frames[i]);
+        }
+        return this;
+    };
 
     this.move = function(x, y){
         this.box.dmove(x, y);
@@ -127,5 +144,49 @@ function Sprite(game, palette, dim, pix){
         var a = this.bitmask();
         var b = obj.bitmask();
         return !( a.x1 < b.x0 || a.x0 > b.x1 || a.y0 > b.y1 || a.y1 < b.y0 )
+    };
+
+    this.flipbits = function(bitmaps){
+        var bitmaps1 = [bitmaps[1], bitmaps[0], bitmaps[3], bitmaps[2]]
+        var bitmaps2 = [];
+
+        for(var b=0, bl=bitmaps1.length; b<bl; b++){
+            var bitmap = [];
+            var row = [];
+            for(var i=0, l=bitmaps1[b].length; i<=l; i++){
+                if(i%this.dim===0){
+                    if(row.length>0){
+                        bitmap = bitmap.concat(row.reverse());
+                    }
+                    row = [bitmaps1[b][i]];
+                }else{
+                    row.push(bitmaps1[b][i]);
+                }
+            }
+            bitmaps2.push(bitmap);
+        }
+        return bitmaps2;
+    }
+
+    this.flip = function(bitmap, offset, cols){
+        return this.draw(bitmap, offset, cols, true);
+    };
+
+    this.show = function(){
+        var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
+        frames[game.frame].opacity(1);
+    };
+
+    this.hide = function(){
+        var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
+        for(var i=0, l=frames.length; i<l; i++){
+            frames[i].opacity(0);
+        }
+    };
+
+    this.turn = function(direction){
+        this.hide();
+        this.direction = direction;
+        this.show();
     };
 }

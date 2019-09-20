@@ -63,7 +63,6 @@ function Physics(game){
                 this.delay = delay!==undefined ? delay : 0;
                 sprite.dmove(this.momentum, this.lift);
                 setTimeout(this.unfloat.bind(this), this.delay);
-                // this.reset();
             }
 
             this.reset();

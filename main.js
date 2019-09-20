@@ -18,6 +18,10 @@ var game,
     frame2,
     frame3,
     frame4,
+    frame5,
+    frame6,
+    frame7,
+    frame8,
     fish,
     fish1,
     fish2,
@@ -29,7 +33,6 @@ var game,
     digits,
     rank,
     stage,
-    player,
     balloon,
     balloon_frames,
     bolt,
@@ -41,6 +44,7 @@ var game,
     low_alt_timer = 0,
     low_alt_duration = 0,
     distance = 0,
+    player = {},
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -82,13 +86,21 @@ var game,
         game.states.FISH_ATTACK = "fish attack";
 
         dude = new Sprite(game, palette, DIM, PIX);
+        // flip = new Sprite(game, palette, DIM, PIX);
 
-        frame1 = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
-        frame2 = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
-        frame3 = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1));
-        frame4 = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX }));
+        frame1 = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        frame2 = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        frame3 = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        frame4 = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX })).opacity(0);
 
-        player = dude.add(frame1, frame2, frame3, frame4);
+        frame5 = dude.group(dude.flip(dude1, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        frame6 = dude.group(dude.flip(dude2, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        frame7 = dude.group(dude.flip(dude3, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        frame8 = dude.group(dude.flip(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.flip(bal2, { x:0, y: 2*PIX })).opacity(0);
+
+        player = dude.define('left',  [frame1, frame2, frame3, frame4]);
+        player = dude.define('right', [frame5, frame6, frame7, frame8]);
+        player.direction = 'left';
 
         game.layers.sprites.add(player.sprite);
 
@@ -154,11 +166,6 @@ var game,
         fish6 = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
         fishy = fish.add(fish1, fish2, fish3, fish4, fish5, fish6);
 
-        dude.frames[0].opacity(0);
-        dude.frames[1].opacity(0);
-        dude.frames[2].opacity(0);
-        dude.frames[3].opacity(0);
-
         dead = dude.draw(dude5, {x:0, y:0});
         dead.opacity(0);
         electro = dude.draw(dude8, {x:0, y:0});
@@ -183,10 +190,12 @@ var game,
 
         control.set("left",  function(){
             physics.momentum = physics.basespeed;
+            player.turn("left");
         });
 
         control.set("right", function(){
             physics.momentum = physics.basespeed;
+            player.turn("right");
         });
 
         control.set("a",     function(){
@@ -391,6 +400,7 @@ var game,
                 physics.accelerate(PIX*1.5);
             else if(control.direction=="left")
                 physics.momentum = 0;
+            // player.direction = 'right';
         }
 
         if( control.pressed("LEFT") ){
@@ -398,6 +408,7 @@ var game,
                 physics.accelerate(PIX/2);
             else if(control.direction=="right")
                 physics.momentum = 0;
+            // player.direction = 'left';
         }
 
         if( control.pressed("A") ){
