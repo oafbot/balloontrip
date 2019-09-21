@@ -428,7 +428,6 @@ var game,
             if(game.counter%10===0){
                 sound.audio.flap.time = 0;
                 sound.play('flap');
-                // setTimeout(function(){try{sound.stop('flap')}catch(e){console.log('whatever')}}, 600);
             }
         }
 
@@ -574,55 +573,56 @@ var game,
     }
 
     var scroll = function(){
-        var items = game.layers.objects.children();
-        var background = game.layers.background.children();
+        if(game.state!=game.states.FISH_ATTACK){
+            var items = game.layers.objects.children();
+            var background = game.layers.background.children();
 
-        for(var i=0, l=items.length; i<l; i++){
-            var type = items[i].classes();
-            var index = type.indexOf("bolt");
-            if(type.length>1 && index>-1){
-                type.splice(index, 1);
-                switch(type[0]){
-                    case "N":
-                        items[i].dmove(PIX*0.75, -PIX*0.75);
-                        break;
-                    case "NE":
-                        items[i].dmove(PIX*1.25, -PIX*0.75);
-                        break;
-                    case "E":
-                        items[i].dmove(PIX*1.25, 0);
-                        break;
-                    case "SE":
-                        items[i].dmove(PIX*1.25, PIX*0.75);
-                        break;
-                    case "S":
-                        items[i].dmove(PIX*0.75, PIX*0.75);
-                        break;
+            for(var i=0, l=items.length; i<l; i++){
+                var type = items[i].classes();
+                var index = type.indexOf("bolt");
+                if(type.length>1 && index>-1){
+                    type.splice(index, 1);
+                    switch(type[0]){
+                        case "N":
+                            items[i].dmove(PIX*0.75, -PIX*0.75);
+                            break;
+                        case "NE":
+                            items[i].dmove(PIX*1.25, -PIX*0.75);
+                            break;
+                        case "E":
+                            items[i].dmove(PIX*1.25, 0);
+                            break;
+                        case "SE":
+                            items[i].dmove(PIX*1.25, PIX*0.75);
+                            break;
+                        case "S":
+                            items[i].dmove(PIX*0.75, PIX*0.75);
+                            break;
+                    }
+                }
+                else{
+                    items[i].dmove(PIX*0.75);
                 }
             }
-            else{
-                items[i].dmove(PIX*0.75);
+
+            for(var i=0, l=background.length; i<l; i++){
+                background[i].dmove(PIX*0.50);
+                if(background[i].x()>=game.bounds.right){
+                    background[i].remove();
+                    delete background[i];
+                }
+            }
+
+            if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
+                stand.dmove(PIX/2);
+                player.move(PIX/2);
+            }
+            if(player.position().x==game.bounds.right-player.sprite.bbox().width){
+                game.started = true;
+                stand.opacity(0);
+                dude.animate(game.frame);
             }
         }
-
-        for(var i=0, l=background.length; i<l; i++){
-            background[i].dmove(PIX*0.50);
-            if(background[i].x()>=game.bounds.right){
-                background[i].remove();
-                delete background[i];
-            }
-        }
-
-        if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
-            stand.dmove(PIX/2);
-            player.move(PIX/2);
-        }
-        if(player.position().x==game.bounds.right-player.sprite.bbox().width){
-            game.started = true;
-            stand.opacity(0);
-            dude.animate(game.frame);
-        }
-
         // cleanup(game.cast.balloons);
         // cleanup(game.cast.bolts);
     };
