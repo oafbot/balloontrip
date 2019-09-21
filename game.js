@@ -22,6 +22,9 @@ function Game(screen){
     this.state = 0;
     this.funcs = {};
     this.textbox = [];
+    this.audio = {
+        on : true,
+    };
 
     this.states = {
         "START"     : "start",
@@ -64,6 +67,7 @@ function Game(screen){
         this.PAUSED = false;
         requestAnimationFrame(this.loop);
         this.state = this.states["RUNNING"];
+        this.audio.on = true;
         // console.log("running.")
     };
 
@@ -79,6 +83,7 @@ function Game(screen){
     this.pause = function(){
         this.PAUSED = true;
         this.state = this.states["PAUSED"];
+        this.audio.on = false;
         // console.log("paused.");
     }
 

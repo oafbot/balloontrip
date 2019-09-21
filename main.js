@@ -85,6 +85,9 @@ var game,
         game.score = 0;
         game.states.FISH_ATTACK = "fish attack";
 
+        game.util   = new Utilities(game);
+        game.events = new EventRegistry(game);
+
         dude = new Sprite(game, palette, DIM, PIX);
         // flip = new Sprite(game, palette, DIM, PIX);
 
@@ -183,17 +186,19 @@ var game,
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
-        physics.speedRange(PIX, PIX*1.5);
+        physics.speedRange(0, PIX*1.5);
 
         control = new Controller(game);
         control.init();
 
         control.set("left",  function(){
+            if(!game.started && game.state=="running") game.started = true;
             physics.momentum = physics.basespeed;
             player.turn("left");
         });
 
         control.set("right", function(){
+            if(!game.started && game.state=="running") game.started = true;
             physics.momentum = physics.basespeed;
             player.turn("right");
         });
@@ -220,9 +225,9 @@ var game,
                 game.textbox.status.text("PAUSE");
             }
             else{
-                sound.audio.pause.currTime = 0;
+                sound.audio.pause.time = 0;
                 sound.play('pause');
-                setTimeout(function(){sound.playloop('music', 0.5);}, 500);
+                setTimeout(function(){sound.loop('music', 0.5);}, 500);
                 game.textbox.status.text("");
                 this.game.run();
             }
@@ -243,26 +248,19 @@ var game,
             delete game.layers.title;
 
             sound = new Sound(game);
-            if(sound.audio.music===undefined)
-                sound.new('music', 'sounds/trip.mp3');
-            if(sound.audio.burst===undefined)
-                sound.new('burst', 'sounds/burst.mp3');
-            if(sound.audio.pause===undefined)
-                sound.new('pause', 'sounds/pause.mp3');
-            if(sound.audio.dead===undefined)
-                sound.new('dead', 'sounds/clear.mp3');
-            if(sound.audio.flap===undefined)
-                sound.new('flap', 'sounds/flap.mp3');
-            if(sound.audio.fall===undefined)
-                sound.new('fall', 'sounds/fall.mp3');
-            if(sound.audio.buzz===undefined)
-                sound.new('buzz', 'sounds/buzz.wav');
-            if(sound.audio.splash===undefined)
-                sound.new('splash', 'sounds/splash.wav');
+            sound.init([
+                {name: 'music',  src: 'sounds/trip.mp3'  },
+                {name: 'burst',  src: 'sounds/burst.mp3' },
+                {name: 'pause',  src: 'sounds/pause.mp3' },
+                {name: 'dead',   src: 'sounds/clear.mp3' },
+                {name: 'flap',   src: 'sounds/flap.mp3'  },
+                {name: 'fall',   src: 'sounds/fall.mp3'  },
+                {name: 'buzz',   src: 'sounds/buzz.wav'  },
+                {name: 'splash', src: 'sounds/splash.wav'}
+            ]);
+            sound.onload(function(){ sound.loop('music', 0.5); game.run(); });
 
             set_course();
-            sound.playloop('music', 0.5);
-            game.run();
         });
 
         title();
@@ -396,20 +394,26 @@ var game,
 
     var update = function(){
         if( control.pressed("RIGHT") ){
+            if(game.started && stand.opacity())
+                stand.opacity(0);
+
             if(control.direction=="right" && game.counter%40===0)
                 physics.accelerate(PIX*1.5);
             else if(control.direction=="left")
-                physics.momentum = 0;
+                physics.decelerate(PIX/2);
 
             if(!control.pressed("A"))
                 dude.animate(game.frame);
         }
 
         if( control.pressed("LEFT") ){
+            if(game.started && stand.opacity())
+                stand.opacity(0);
+
             if(control.direction=="left" && game.counter%40===0)
                 physics.accelerate(PIX/2);
             else if(control.direction=="right")
-                physics.momentum = 0;
+                physics.decelerate(PIX*1.5);
 
             if(!control.pressed("A"))
                 dude.animate(game.frame);
@@ -422,9 +426,9 @@ var game,
             dude.animate(game.frame);
 
             if(game.counter%10===0){
-                sound.audio.flap.currentTime = 0;
+                sound.audio.flap.time = 0;
                 sound.play('flap');
-                setTimeout(function(){try{sound.stop('flap')}catch(e){console.log('whatever')}}, 600);
+                // setTimeout(function(){try{sound.stop('flap')}catch(e){console.log('whatever')}}, 600);
             }
         }
 
@@ -509,6 +513,7 @@ var game,
         if( !physics.vector.bouncing && control.pressed("A") ){
             if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
                 physics.momentum = 0;
+                // physics.decelerate(PIX);
                 control.direction = "up";
                 physics.vector.direction = 'N';
             }
@@ -531,7 +536,8 @@ var game,
             if(game.cast.balloons[i]!==undefined){
 
                 if(player.collision(game.cast.balloons[i])){
-                    sound.audio.burst.currentTime = 0;
+                    // sound.audio.burst.time = 0;
+                    // sound.audio.burst.playing = false;
                     sound.play('burst');
 
                     game.cast.balloons[i].sprite.remove();
@@ -624,7 +630,7 @@ var game,
     var gameover = function(){
         game.state = game.states.GAME_OVER;
         sound.stop('music');
-        sound.playloop('buzz');
+        sound.loop('buzz');
         dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
         player.sprite.opacity(0);
         var buzzing = true;
@@ -656,14 +662,16 @@ var game,
             setTimeout(function(){
                 sound.play('dead', 0.4);
                 game.textbox.status.text("GAME OVER");
+                setTimeout(reset, 5000);
             }, 1200);
         }, 800);
     };
 
     var fish_animation = function(f){
-        // requestAnimationFrame(function(){});
-        if(fishy.frame<fishy.frames.length)
-            fishy.frame++;
+        requestAnimationFrame(function(){
+            if(fishy.frame<fishy.frames.length)
+                fishy.frame++;
+        });
 
         if(fishy.frame===0)
             fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
@@ -682,6 +690,8 @@ var game,
     var eaten = function(){
         game.state = game.states.FISH_ATTACK;
 
+        fishy.animate(fishy.frame, fish_animation);
+
         if(game.state!="end loop"){
             sound.stop('music');
             sound.play('splash');
@@ -689,8 +699,6 @@ var game,
             dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height).opacity(1);
             player.sprite.opacity(0);
         }
-
-        fishy.animate(fishy.frame, fish_animation);
 
         if(fishy.frame==4){
             dead.opacity(0);
@@ -701,17 +709,20 @@ var game,
             sound.play('dead', 0.4);
             game.state = game.states.GAME_OVER;
             game.textbox.status.text("GAME OVER");
+            setTimeout(reset, 5000);
         }
     }
 
     var reset = function(){
-        for(var i in game.layers){
-            game.layers[i].remove();
-            delete game.layers[i];
-            game.layers[i] = screen.group().attr('id', i);
+        if(game.state==game.states.GAME_OVER){
+            for(var i in game.layers){
+                game.layers[i].remove();
+                delete game.layers[i];
+                game.layers[i] = screen.group().attr('id', i);
+            }
+            init();
+            run();
         }
-        init();
-        run();
     };
 
     var run = function(){
