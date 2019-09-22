@@ -89,7 +89,6 @@ var game,
         game.events = new EventRegistry(game);
 
         dude = new Sprite(game, palette, DIM, PIX);
-        // flip = new Sprite(game, palette, DIM, PIX);
 
         frame1 = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
         frame2 = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
@@ -117,7 +116,7 @@ var game,
 
         bolt = new Sprite(game, palette2, DIM, PIX*0.75);
         bolt_frames = [
-            [[ [b[23], b[24], b[25], b[26]], { x:0, y: 0} ]],
+            [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
             [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
             [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
             [[[b[35], b[36], b[37], b[38]], { x:0, y: 0}]]
@@ -688,16 +687,16 @@ var game,
     };
 
     var eaten = function(){
-        game.state = game.states.FISH_ATTACK;
 
         fishy.animate(fishy.frame, fish_animation);
 
-        if(game.state!="end loop"){
+        if(game.state!=game.states.FISH_ATTACK){
             sound.stop('music');
             sound.play('splash');
-            game.state = game.states.END_LOOP;
+            // game.state = game.states.END_LOOP;
             dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height).opacity(1);
             player.sprite.opacity(0);
+            game.state = game.states.FISH_ATTACK;
         }
 
         if(fishy.frame==4){
