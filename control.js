@@ -11,7 +11,7 @@ function Controller(game){
         "A"          : 90,  // z
         "B"          : 88,  // x
         "MUSIC"      : 77,  // m
-        "COMBAT"     : 191, // slash
+        "CANCEL"     : 191, // slash
         "LEFT_ALT"   : 65,  // a
         "RIGHT_ALT"  : 68,  // d
         "UP_ALT"     : 87,  // w
@@ -36,17 +36,17 @@ function Controller(game){
 
     this.init = function(direction){
         var opts = {};
-        opts[keys.PAUSE]     = function(){ self.pause(); };
-        opts[keys.LEFT]      = function(){ if(!self.game.PAUSED) self.left();  };
-        opts[keys.UP]        = function(){ if(!self.game.PAUSED) self.up();    };
-        opts[keys.RIGHT]     = function(){ if(!self.game.PAUSED) self.right(); };
-        opts[keys.DOWN]      = function(){ if(!self.game.PAUSED) self.down();  };
-        opts[keys.A]         = function(){ if(!self.game.PAUSED) self.a()      };
-        opts[keys.B]         = function(){ if(!self.game.PAUSED) self.b()      };
-        opts[keys.LEFT_ALT]  = function(){ if(!self.game.PAUSED) self.left();  };
-        opts[keys.UP_ALT]    = function(){ if(!self.game.PAUSED) self.up();    };
-        opts[keys.RIGHT_ALT] = function(){ if(!self.game.PAUSED) self.right(); };
-        opts[keys.DOWN_ALT]  = function(){ if(!self.game.PAUSED) self.down();  };
+        opts[keys.PAUSE]     = function(event){ self.pause(event); };
+        opts[keys.LEFT]      = function(event){ if(!self.game.PAUSED) self.left(event);  };
+        opts[keys.UP]        = function(event){ if(!self.game.PAUSED) self.up(event);    };
+        opts[keys.RIGHT]     = function(event){ if(!self.game.PAUSED) self.right(event); };
+        opts[keys.DOWN]      = function(event){ if(!self.game.PAUSED) self.down(event);  };
+        opts[keys.A]         = function(event){ if(!self.game.PAUSED) self.a(event)      };
+        opts[keys.B]         = function(event){ if(!self.game.PAUSED) self.b(event)      };
+        opts[keys.LEFT_ALT]  = function(event){ if(!self.game.PAUSED) self.left(event);  };
+        opts[keys.UP_ALT]    = function(event){ if(!self.game.PAUSED) self.up(event);    };
+        opts[keys.RIGHT_ALT] = function(event){ if(!self.game.PAUSED) self.right(event); };
+        opts[keys.DOWN_ALT]  = function(event){ if(!self.game.PAUSED) self.down(event);  };
         this.keyboard(opts, KEY_INTERVAL);
         game.controls = this;
         this.direction = direction;
@@ -68,7 +68,7 @@ function Controller(game){
 
             if (!(key in timers)) {
                 timers[key]= null;
-                keys[key]();
+                keys[key](event);
                 if (repeat!==0)
                     requestAnimationFrame(function(){ /*console.log(key);*/  timers[key] = true; });
                     // timers[key] = setInterval(keys[key], repeat);
@@ -98,7 +98,7 @@ function Controller(game){
         };
     }
 
-    this.pause = function(){
+    this.pause = function(event){
         if(this.game.state!=this.game.states["RUNNING"]){
             this.game.start();
         }

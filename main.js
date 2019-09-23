@@ -10,33 +10,17 @@ var game,
     gravity,
     control,
     sound,
+    stage,
     dude,
     dead,
     stand,
     electro,
-    frame1,
-    frame2,
-    frame3,
-    frame4,
-    frame5,
-    frame6,
-    frame7,
-    frame8,
     fish,
-    fish1,
-    fish2,
-    fish3,
-    fish4,
-    fish5,
-    fish6,
     fishy,
     digits,
     rank,
-    stage,
     balloon,
-    balloon_frames,
     bolt,
-    bolt_frames,
     water,
     start,
     waterline,
@@ -45,6 +29,11 @@ var game,
     low_alt_duration = 0,
     distance = 0,
     player = {},
+
+    _dude    = [],
+    _fish    = [],
+    _balloon = [],
+    _bolt    = [],
 
     screen = SVG('screen').attr('id', 'game'),
     top = top===undefined ? TOP : top;
@@ -73,7 +62,6 @@ var game,
     palette5 = [null, '#f90', '#fff'];
 
     var init = function(){
-        // var stage = screen.rect('100%', '60%');
         stage = screen.rect(800, 480).attr('id', 'backdrop');
         stage.fill('#000');
 
@@ -83,31 +71,29 @@ var game,
         game.cast.balloons = [];
         game.cast.bolts    = [];
         game.score = 0;
-        game.states.FISH_ATTACK = "fish attack";
 
         game.util   = new Utilities(game);
         game.events = new EventRegistry(game);
 
         dude = new Sprite(game, palette, DIM, PIX);
 
-        frame1 = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        frame2 = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        frame3 = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        frame4 = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX })).opacity(0);
+        _dude[0] = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        _dude[1] = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        _dude[2] = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
+        _dude[3] = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX })).opacity(0);
+        _dude[4] = dude.group(dude.flip(dude1, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        _dude[5] = dude.group(dude.flip(dude2, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        _dude[6] = dude.group(dude.flip(dude3, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
+        _dude[7] = dude.group(dude.flip(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.flip(bal2, { x:0, y: 2*PIX })).opacity(0);
 
-        frame5 = dude.group(dude.flip(dude1, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        frame6 = dude.group(dude.flip(dude2, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        frame7 = dude.group(dude.flip(dude3, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        frame8 = dude.group(dude.flip(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.flip(bal2, { x:0, y: 2*PIX })).opacity(0);
-
-        player = dude.define('left',  [frame1, frame2, frame3, frame4]);
-        player = dude.define('right', [frame5, frame6, frame7, frame8]);
+        player = dude.define('left',  [_dude[0], _dude[1], _dude[2], _dude[3]]);
+        player = dude.define('right', [_dude[4], _dude[5], _dude[6], _dude[7]]);
         player.direction = 'left';
 
         game.layers.sprites.add(player.sprite);
 
         balloon = new Sprite(game, palette2, DIM, PIX);
-        balloon_frames = [
+        _balloon = [
             [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]],
             [[bal3, { x:0, y: 0}], [bal5, { x:0, y: DIM*2*PIX }]],
             [[bal3, { x:0, y: 0}], [bal5, { x:0, y: DIM*2*PIX }]],
@@ -115,7 +101,7 @@ var game,
         ];
 
         bolt = new Sprite(game, palette2, DIM, PIX*0.75);
-        bolt_frames = [
+        _bolt = [
             [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
             [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
             [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
@@ -160,13 +146,13 @@ var game,
         }
 
         fish = new Sprite(game, palette4, DIM, PIX);
-        fish1 = fish.draw([b[57], b[58], b[59], b[60]], {x:0, y:0}).opacity(0);
-        fish2 = fish.draw([b[61], b[62], b[63], b[64]], {x:0, y:0}).opacity(0);
-        fish3 = fish.draw([b[65], b[66], b[67], b[68], b[69], b[70]], {x:0, y:0}).opacity(0);
-        fish4 = fish.draw([b[71], b[72], b[73], b[74]], {x:0, y:0}).opacity(0);
-        fish5 = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
-        fish6 = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
-        fishy = fish.add(fish1, fish2, fish3, fish4, fish5, fish6);
+        _fish[0] = fish.draw([b[57], b[58], b[59], b[60]], {x:0, y:0}).opacity(0);
+        _fish[1] = fish.draw([b[61], b[62], b[63], b[64]], {x:0, y:0}).opacity(0);
+        _fish[2] = fish.draw([b[65], b[66], b[67], b[68], b[69], b[70]], {x:0, y:0}).opacity(0);
+        _fish[3] = fish.draw([b[71], b[72], b[73], b[74]], {x:0, y:0}).opacity(0);
+        _fish[4] = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
+        _fish[5] = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
+        fishy    = fish.add(_fish[0], _fish[1], _fish[2], _fish[3], _fish[4], _fish[5]);
 
         dead = dude.draw(dude5, {x:0, y:0});
         dead.opacity(0);
@@ -185,7 +171,7 @@ var game,
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
-        physics.speedRange(0, PIX*1.5);
+        physics.speedRange(0, PIX*2);
 
         control = new Controller(game);
         control.init();
@@ -208,7 +194,10 @@ var game,
             dude.animate(game.frame);
         });
 
-        control.set("pause", function(){
+        control.set("pause", function(event){
+            if(event!==undefined)
+                event.preventDefault();
+
             if(this.game.state!=this.game.states["RUNNING"] && !game.started){
                 this.game.start();
                 game.textbox.status.text("");
@@ -277,17 +266,16 @@ var game,
         ];
 
         for(i=0, l=locs.length; i<l; i++){
-            buzz = bolt.factory('bolts', bolt_frames);
+            buzz = bolt.factory('bolts', _bolt);
             game.layers.objects.add(buzz.sprite.move(locs[i].x, locs[i].y).addClass('bolt'));
         }
 
         locs = [{x:x-4*w, y:y-2*w}, {x:x-w*15, y:y+w*3}, {x:x-w*15, y:y+w*16}, {x:x-4*w, y:y+w*13}];
 
         for(i=0, l=locs.length; i<l; i++){
-            bal = balloon.factory('balloons', balloon_frames);
+            bal = balloon.factory('balloons', _balloon);
             game.layers.objects.add(bal.sprite.move(locs[i].x, locs[i].y).addClass('balloon'));
         }
-
     };
 
     var randomInt = function(min, max){
@@ -312,7 +300,7 @@ var game,
 
         if(more){
             if(d1<0.05){
-                b = balloon.factory('balloons', balloon_frames);
+                b = balloon.factory('balloons', _balloon);
                 game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
 
                 for(var i=0, l=game.cast.bolts.length; i<l; i++){
@@ -325,7 +313,7 @@ var game,
 
             if(d2<0.15){
                 var cl= 'bolt',
-                    buzz = bolt.factory('bolts', bolt_frames),
+                    buzz = bolt.factory('bolts', _bolt),
                     x = stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4;
 
                 // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
@@ -352,7 +340,7 @@ var game,
                             cl = "bolt E";
                             break;
                     }
-                    // buzz = bolt.factory('bolts', bolt_frames);
+                    // buzz = bolt.factory('bolts', _bolt);
                     // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
                 }
 
@@ -397,7 +385,7 @@ var game,
                 stand.opacity(0);
 
             if(control.direction=="right" && game.counter%40===0)
-                physics.accelerate(PIX*1.5);
+                physics.accelerate(PIX*2);
             else if(control.direction=="left")
                 physics.decelerate(PIX/2);
 
@@ -474,85 +462,84 @@ var game,
             low_alt_timer = 0;
             low_alt_duration = 0;
         }
-
-        if(low_alt_duration>1500){
-            eaten();
-        }
     };
 
     var tween = function(){
-        if( !physics.vector.bouncing && control.pressed("RIGHT") ){
-            control.direction = "right";
-
-            physics.vector.direction = control.pressed("A") ? 'NE' : 'E';
-
-            if(player.sprite.cx()<game.bounds.right && !gravity.grounded){
-                player.move(physics.momentum, 0);
-            }
-            else{
-                physics.momentum = 0;
-            }
+        if(low_alt_duration>1500){
+            eaten();
         }
+        else/* if(game.state!=game.states.END_LOOP)*/{
+            if( !physics.vector.bouncing && control.pressed("RIGHT") ){
+                control.direction = "right";
 
-        if( !physics.vector.bouncing && control.pressed("LEFT") ){
-            control.direction = "left";
+                physics.vector.direction = control.pressed("A") ? 'NE' : 'E';
 
-            physics.vector.direction = control.pressed("A") ? 'NW' : 'W';
-
-
-            if(player.sprite.cx()>game.bounds.left && !gravity.grounded){
-                player.move(-physics.momentum, 0);
-            }
-            else{
-                physics.momentum = 0;
-            }
-        }
-
-        if( !physics.vector.bouncing && control.pressed("A") ){
-            if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
-                physics.momentum = 0;
-                // physics.decelerate(PIX);
-                control.direction = "up";
-                physics.vector.direction = 'N';
-            }
-
-            if(player.sprite.cy() < game.bounds.top){
-                physics.deflect(player.sprite);
-            }else{
-                gravity.float(DELAY);
-            }
-            gravity.grounded = false;
-        }
-        else{
-            if(game.started)
-                gravity.update();
-            physics.vector.direction = 'S';
-        }
-        scroll();
-
-        for(var i=0, l=game.cast.balloons.length; i<l; i++){
-            if(game.cast.balloons[i]!==undefined){
-
-                if(player.collision(game.cast.balloons[i])){
-                    // sound.audio.burst.time = 0;
-                    // sound.audio.burst.playing = false;
-                    sound.play('burst');
-
-                    game.cast.balloons[i].sprite.remove();
-                    delete game.cast.balloons[i];
-
-                    game.score += 300;
-                    digits = String(game.score).length;
-                    digits = 10 - digits;
-                    game.textbox.score.text('PLAYER: ' + "0".repeat(digits) + game.score);
+                if(player.sprite.cx()<game.bounds.right && !gravity.grounded && game.state==game.states.RUNNING){
+                    player.move(physics.momentum, 0);
+                }
+                else{
+                    physics.momentum = 0;
                 }
             }
-        }
 
-        cleanup(game.cast.balloons);
-        cleanup(game.cast.bolts);
+            if( !physics.vector.bouncing && control.pressed("LEFT") ){
+                control.direction = "left";
 
-        if(game.state!=game.states.FISH_ATTACK)
+                physics.vector.direction = control.pressed("A") ? 'NW' : 'W';
+
+
+                if(player.sprite.cx()>game.bounds.left && !gravity.grounded && game.state==game.states.RUNNING){
+                    player.move(-physics.momentum, 0);
+                }
+                else{
+                    physics.momentum = 0;
+                }
+            }
+
+            if( !physics.vector.bouncing && control.pressed("A") ){
+                if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
+                    physics.momentum = 0;
+                    // physics.decelerate(PIX);
+                    control.direction = "up";
+                    physics.vector.direction = 'N';
+                }
+
+                if(player.sprite.cy() < game.bounds.top){
+                    physics.deflect(player.sprite);
+                }else{
+                    gravity.float(DELAY);
+                }
+                gravity.grounded = false;
+            }
+            else{
+                if(game.started)
+                    gravity.update();
+                physics.vector.direction = 'S';
+            }
+            scroll();
+
+            for(var i=0, l=game.cast.balloons.length; i<l; i++){
+                if(game.cast.balloons[i]!==undefined){
+
+                    if(player.collision(game.cast.balloons[i])){
+                        sound.audio.burst.time = 0;
+                        sound.audio.burst.playing = false;
+                        sound.play('burst');
+
+                        game.cast.balloons[i].sprite.remove();
+                        delete game.cast.balloons[i];
+
+                        game.score += 300;
+                        digits = String(game.score).length;
+                        digits = 10 - digits;
+                        game.textbox.score.text('PLAYER: ' + "0".repeat(digits) + game.score);
+                    }
+                }
+            }
+
+            cleanup(game.cast.balloons);
+            cleanup(game.cast.bolts);
+
             for(var i=0, l=game.cast.bolts.length; i<l; i++){
                 if(game.cast.bolts[i]!==undefined){
                     if(player.collision(game.cast.bolts[i])){
@@ -561,8 +548,9 @@ var game,
                 }
             }
 
-        if(control.pressed("A"))
-            gravity.float(DELAY);
+            if(control.pressed("A"))
+                gravity.float(DELAY);
+        }
     };
 
     var cleanup = function(items){
@@ -572,7 +560,7 @@ var game,
     }
 
     var scroll = function(){
-        if(game.state!=game.states.FISH_ATTACK){
+        // if(game.state==game.states.RUNNING){
             var items = game.layers.objects.children();
             var background = game.layers.background.children();
 
@@ -621,7 +609,7 @@ var game,
                 stand.opacity(0);
                 dude.animate(game.frame);
             }
-        }
+        // }
         // cleanup(game.cast.balloons);
         // cleanup(game.cast.bolts);
     };
@@ -639,7 +627,6 @@ var game,
                 electro.move(dead.x(), dead.y())
                 dead.opacity(0);
                 electro.opacity(1);
-
             }
             else{
                 dead.opacity(1);
@@ -668,7 +655,7 @@ var game,
 
     var fish_animation = function(f){
         requestAnimationFrame(function(){
-            if(fishy.frame<fishy.frames.length)
+            if(game.counter%10===0 && fishy.frame<fishy.frames.length)
                 fishy.frame++;
         });
 
@@ -687,22 +674,23 @@ var game,
     };
 
     var eaten = function(){
-
-        fishy.animate(fishy.frame, fish_animation);
-
-        if(game.state!=game.states.FISH_ATTACK){
+        if(game.state!=game.states.END_LOOP){
             sound.stop('music');
             sound.play('splash');
-            // game.state = game.states.END_LOOP;
-            dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height).opacity(1);
             player.sprite.opacity(0);
-            game.state = game.states.FISH_ATTACK;
+            dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height);
+            game.state = game.states.END_LOOP;
         }
 
         if(fishy.frame==4){
             dead.opacity(0);
             dead.remove();
         }
+        else{
+            dead.opacity(1);
+        }
+
+        fishy.animate(fishy.frame, fish_animation);
 
         if(fishy.frame>=fishy.frames.length){
             sound.play('dead', 0.4);
