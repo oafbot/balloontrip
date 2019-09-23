@@ -468,7 +468,7 @@ var game,
         if(low_alt_duration>1500){
             eaten();
         }
-        else/* if(game.state!=game.states.END_LOOP)*/{
+        else{
             if( !physics.vector.bouncing && control.pressed("RIGHT") ){
                 control.direction = "right";
 
@@ -499,7 +499,6 @@ var game,
             if( !physics.vector.bouncing && control.pressed("A") ){
                 if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
                     physics.momentum = 0;
-                    // physics.decelerate(PIX);
                     control.direction = "up";
                     physics.vector.direction = 'N';
                 }
@@ -522,8 +521,8 @@ var game,
                 if(game.cast.balloons[i]!==undefined){
 
                     if(player.collision(game.cast.balloons[i])){
-                        sound.audio.burst.time = 0;
-                        sound.audio.burst.playing = false;
+                        // sound.audio.burst.time = 0;
+                        // sound.audio.burst.playing = false;
                         sound.play('burst');
 
                         game.cast.balloons[i].sprite.remove();
@@ -560,58 +559,54 @@ var game,
     }
 
     var scroll = function(){
-        // if(game.state==game.states.RUNNING){
-            var items = game.layers.objects.children();
-            var background = game.layers.background.children();
+        var items = game.layers.objects.children();
+        var background = game.layers.background.children();
 
-            for(var i=0, l=items.length; i<l; i++){
-                var type = items[i].classes();
-                var index = type.indexOf("bolt");
-                if(type.length>1 && index>-1){
-                    type.splice(index, 1);
-                    switch(type[0]){
-                        case "N":
-                            items[i].dmove(PIX*0.75, -PIX*0.75);
-                            break;
-                        case "NE":
-                            items[i].dmove(PIX*1.25, -PIX*0.75);
-                            break;
-                        case "E":
-                            items[i].dmove(PIX*1.25, 0);
-                            break;
-                        case "SE":
-                            items[i].dmove(PIX*1.25, PIX*0.75);
-                            break;
-                        case "S":
-                            items[i].dmove(PIX*0.75, PIX*0.75);
-                            break;
-                    }
-                }
-                else{
-                    items[i].dmove(PIX*0.75);
+        for(var i=0, l=items.length; i<l; i++){
+            var type = items[i].classes();
+            var index = type.indexOf("bolt");
+            if(type.length>1 && index>-1){
+                type.splice(index, 1);
+                switch(type[0]){
+                    case "N":
+                        items[i].dmove(PIX*0.75, -PIX*0.75);
+                        break;
+                    case "NE":
+                        items[i].dmove(PIX*1.25, -PIX*0.75);
+                        break;
+                    case "E":
+                        items[i].dmove(PIX*1.25, 0);
+                        break;
+                    case "SE":
+                        items[i].dmove(PIX*1.25, PIX*0.75);
+                        break;
+                    case "S":
+                        items[i].dmove(PIX*0.75, PIX*0.75);
+                        break;
                 }
             }
+            else{
+                items[i].dmove(PIX*0.75);
+            }
+        }
 
-            for(var i=0, l=background.length; i<l; i++){
-                background[i].dmove(PIX*0.50);
-                if(background[i].x()>=game.bounds.right){
-                    background[i].remove();
-                    delete background[i];
-                }
+        for(var i=0, l=background.length; i<l; i++){
+            background[i].dmove(PIX*0.50);
+            if(background[i].x()>=game.bounds.right){
+                background[i].remove();
+                delete background[i];
             }
+        }
 
-            if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
-                stand.dmove(PIX/2);
-                player.move(PIX/2);
-            }
-            if(player.position().x==game.bounds.right-player.sprite.bbox().width){
-                game.started = true;
-                stand.opacity(0);
-                dude.animate(game.frame);
-            }
-        // }
-        // cleanup(game.cast.balloons);
-        // cleanup(game.cast.bolts);
+        if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
+            stand.dmove(PIX/2);
+            player.move(PIX/2);
+        }
+        if(player.position().x==game.bounds.right-player.sprite.bbox().width){
+            game.started = true;
+            stand.opacity(0);
+            dude.animate(game.frame);
+        }
     };
 
     var gameover = function(){
