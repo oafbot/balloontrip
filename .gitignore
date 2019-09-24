@@ -4,3 +4,4 @@ venv
 .jshintrc
 *.sublime-workspace
 README.html
+hiscore.txt

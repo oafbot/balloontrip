@@ -175,6 +175,7 @@ var game,
 
         control = new Controller(game);
         control.init();
+        control.lock();
 
         control.set("left",  function(){
             if(!game.started && game.state=="running") game.started = true;
@@ -198,7 +199,7 @@ var game,
             if(event!==undefined)
                 event.preventDefault();
 
-            if(this.game.state!=this.game.states["RUNNING"] && !game.started){
+            if(this.game.state!=this.game.states["RUNNING"] && !game.started && !this.game.PAUSED){
                 this.game.start();
                 game.textbox.status.text("");
                 rank = 50;
@@ -246,7 +247,12 @@ var game,
                 {name: 'buzz',   src: 'sounds/buzz.wav'  },
                 {name: 'splash', src: 'sounds/splash.wav'}
             ]);
-            sound.onload(function(){ sound.loop('music', 0.5); game.run(); });
+
+            sound.onload(function(){
+                sound.loop('music', 0.5);
+                control.unlock();
+                game.run();
+            });
 
             set_course();
         });
@@ -381,7 +387,7 @@ var game,
 
     var update = function(){
         if( control.pressed("RIGHT") ){
-            if(game.started && stand.opacity())
+            if(stand.opacity())
                 stand.opacity(0);
 
             if(control.direction=="right" && game.counter%40===0)
@@ -394,7 +400,7 @@ var game,
         }
 
         if( control.pressed("LEFT") ){
-            if(game.started && stand.opacity())
+            if(stand.opacity())
                 stand.opacity(0);
 
             if(control.direction=="left" && game.counter%40===0)
@@ -407,7 +413,7 @@ var game,
         }
 
         if( control.pressed("A") ){
-            if(game.started && stand.opacity())
+            if(stand.opacity())
                 stand.opacity(0);
 
             dude.animate(game.frame);
