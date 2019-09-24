@@ -249,9 +249,12 @@ var game,
             ]);
 
             sound.onload(function(){
-                sound.loop('music', 0.5);
-                control.unlock();
-                game.run();
+                // a little delay added for safari, so sound plays properly on game start
+                setTimeout(function(){
+                    sound.loop('music', 0.5);
+                    control.unlock();
+                    game.run();
+                }, 200);
             });
 
             set_course();
