@@ -30,12 +30,11 @@
             font-family: 'Nintendo';
             src: url('fonts/Nintend Bold.otf') format('opentype');
         }
-        @font-face {
-            font-family: 'Nintendo';
-            src: url('fonts/Nintend Bold.otf') format('opentype');
-        }
+
         body{
             background-color: #bbb;
+            height:100%;
+            overflow: hidden;
         }
         .press2p{
             font-family: 'Press Start 2P';
@@ -53,7 +52,7 @@
             overflow: hidden;
             border-radius: 10px;
             margin:auto;
-            margin-top:20px;
+            margin-top:10px;
             z-index:2;
             position: relative;
             border: 3px solid #f2ebe2;
@@ -66,31 +65,36 @@
             /*color: #aaa;*/
             color:#f2ebe2;
             margin:auto;
-            margin-top:20px;
+            /*margin-top:10px;*/
         }
         .info span{
             font-size: 0.8em;
             line-height: 1.6em;
         }
         .key{
-            color:#e9dbbf;
+            /*color:#e9dbbf;*/
+            color:#874849;
         }
         .about{
             font-size: 0.7em;
         }
         .about a{
             /*color:#39f;*/
-            color:#874849;
+            /*color:#874849;*/
+            color: #ff2844;
+            margin-left: -12px;
             text-decoration: none;
+            vertical-align: middle;
+            font-size: 1.5em;
         }
         .about a:hover{
             text-decoration: underline;
         }
         .about a:visited{
             /*color:#39f;*/
-            color:#874849;
+            /*color:#874849;*/
+            color: #ff2844;
             text-decoration: none;
-            /*color:#c6f;*/
         }
         ::-webkit-scrollbar {
             display: none;
@@ -98,7 +102,7 @@
         .bg-image{
             position:absolute;
             right:2%;
-            bottom: 0;
+            bottom: 10;
             width:40%;
             z-index:1;
             transform: rotate(6deg);
@@ -106,6 +110,25 @@
         h1.nintendo{
             /*border-bottom: 2px solid #874849;*/
              color:#874849;
+        }
+        .title{
+            width:800px;
+            margin:auto;
+
+        }
+        .title img{
+            width:250px;
+        }
+        .about .symbol{
+            font-size: 3em;
+            vertical-align: middle;
+            text-shadow: 1px 1px 5px #666;
+        }
+        .elipsis{
+            font-family:sans-serif;
+            font-size:2em;
+            color: #ff2844;
+            font-weight:bold;
         }
     </style>
     <link rel="apple-touch-icon" sizes="57x57" href="favicons/apple-icon-57x57.png">
@@ -137,7 +160,8 @@
         </p>
         <p class="about">
             <br>
-            <a href="https://github.com/oafbot/balloontrip" class="about" target="_blank">Technical details</a>
+            <span class="symbol">&#x1F388;</span>
+            <a href="https://github.com/oafbot/balloontrip" class="about nintendo" target="_blank">technical details<span class="elipsis">&hellip;</span></a>
         </p>
     </div>
     <img src="images/famicom.svg" class="bg-image">

@@ -6,6 +6,7 @@ function Game(screen){
     this.frame = 0;
     this.started = false;
     this.screen = screen;
+    this.time = 0;
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
@@ -19,6 +20,7 @@ function Game(screen){
         title      : screen.group().attr('id', 'title')
     };
     this.cast = {};
+    this.tiles = {};
     this.state = 0;
     this.funcs = {};
     this.textbox = [];
@@ -50,7 +52,10 @@ function Game(screen){
         this.queue[key].push(fn);
     }
 
-    this.loop = function(){
+    this.loop = function(timestamp){
+        // if(self.time === 0)
+        //     self.time = timestamp;
+
         if(!self.PAUSED && self.state!="game over"){
             if(self.counter%KEYFRAME===0){
                 self.update();
@@ -58,9 +63,17 @@ function Game(screen){
             }else{
                 self.tween();
             }
-            self.counter++;
+            self.clock(timestamp);
             requestAnimationFrame(self.loop);
         }
+    };
+
+    this.clock = function(timestamp) {
+        this.delta = this.time>0 ? timestamp - this.time : 0;
+        this.time  = timestamp;
+        // if(this.delta>15){
+        this.counter++;
+        // }
     };
 
     this.run = function(){

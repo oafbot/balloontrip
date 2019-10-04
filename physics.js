@@ -20,7 +20,7 @@ function Physics(game){
             this.y = sprite.y();
             this.lift = 0;
             this.gravity  = 0.98*factor;
-            this.buoyancy = 0.098*factor;
+            this.buoyancy = 0.098*2*factor;
             this.grounded = false;
             this.delay = 0;
 
@@ -76,7 +76,7 @@ function Physics(game){
 
     this.accelerate = function(inc){
         if(Math.abs(this.momentum) < this.topspeed)
-            this.momentum += inc;
+            this.momentum += this.momentum<inc ? inc : this.momentum;
         this.vector.speed = this.momentum;
     }
     this.decelerate = function(dec){

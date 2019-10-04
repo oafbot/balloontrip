@@ -58,29 +58,33 @@ function Controller(game){
         var timers= {};
         self.keypress = timers;
 
-        /**
-        * When key is pressed and we don't already think it's pressed, call the
-        * key action callback and set a timer to generate another one after a delay
-        */
-        document.onkeydown = function(event) {
+        var keyOn = function(event){
             var key= (event || window.event).keyCode;
             if (!(key in keys))
                 return true;
 
             if (!(key in timers)){
-                timers[key]= null;
+                timers[key] = null;
                 keys[key](event);
                 if (repeat!==0)
-                    requestAnimationFrame(function(){ timers[key] = true; });
+                    requestAnimationFrame(keyOn.bind(this, event));
             }
             return false;
         };
 
+        /**
+        * When key is pressed and we don't already think it's pressed, call the
+        * key action callback and set a timer to generate another one after a delay
+        */
+        document.onkeydown = function(event) {
+            keyOn(event);
+        };
+
         /* Cancel timeout and mark key as released on keyup */
         document.onkeyup = function(event) {
-            var key= (event || window.event).keyCode;
+            var key = (event || window.event).keyCode;
             if (key in timers)
-                requestAnimationFrame(function(){ delete timers[key]; });
+                requestAnimationFrame(function(){delete timers[key];});
         };
 
         /**

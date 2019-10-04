@@ -10,58 +10,33 @@ var game,
     gravity,
     control,
     sound,
-    stage,
-    dude,
-    dead,
-    stand,
-    electro,
     fish,
-    fishy,
-    digits,
-    rank,
-    balloon,
     bolt,
-    water,
+    player,
+    balloon,
+    stage,
     start,
-    waterline,
-    low_alt,
+    waterline = 0,
+    low_alt = false,
     low_alt_timer = 0,
     low_alt_duration = 0,
     distance = 0,
-    player = {},
-
-    _dude    = [],
-    _fish    = [],
-    _balloon = [],
-    _bolt    = [],
-
+    ratio  = {},
+    frames = {},
     screen = SVG('screen').attr('id', 'game'),
-    top = top===undefined ? TOP : top;
-
+    top = top===undefined ? TOP : top,
     b = bitmap,
-
-    dude1 = [b[0],  b[1],  b[2],  b[3]],
-    dude2 = [b[0],  b[8],  b[2],  b[9]],
-    dude3 = [b[0],  b[10], b[2],  b[11]],
-    dude4 = [b[14], b[8],  b[2],  b[9]],
-    dude5 = [b[39], b[40], b[41], b[42]],
-    dude6 = [b[47], b[48], b[49], b[50]],
-    dude7 = [b[51], b[52]],
-    dude8 = [b[53], b[54], b[55], b[56]],
-
-    bal1 = [b[4],  b[5], b[6],  b[7]],
-    bal2 = [b[12], b[5], b[13], b[7]],
-    bal3 = [b[15], b[16], b[17], b[18]],
-    bal4 = [b[19], b[20]],
-    bal5 = [b[21], b[22]],
-
-    palette  = [null, '#f06', '#06f', '#fc9'],
-    palette2 = [null, '#9f9', '#06f', '#fff'],
-    palette3 = [null, '#06f', '#3cf', '#fff'],
-    palette4 = [null, '#f60', '#09f', '#9f9'],
-    palette5 = [null, '#f90', '#fff'];
+    palette = [
+        [null, '#f06', '#06f', '#fc9'],
+        [null, '#9f9', '#06f', '#fff'],
+        [null, '#06f', '#3cf', '#fff'],
+        [null, '#f60', '#09f', '#9f9'],
+        [null, '#f90', '#fff']
+    ];
 
     var init = function(){
+        document.getElementById('screen').style.cursor = 'none';
+
         stage = screen.rect(800, 480).attr('id', 'backdrop');
         stage.fill('#000');
 
@@ -70,109 +45,57 @@ var game,
 
         game.cast.balloons = [];
         game.cast.bolts    = [];
+        game.tiles.stars   = [];
         game.score = 0;
 
         game.util   = new Utilities(game);
         game.events = new EventRegistry(game);
 
-        dude = new Sprite(game, palette, DIM, PIX);
-
-        _dude[0] = dude.group(dude.draw(dude1, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        _dude[1] = dude.group(dude.draw(dude2, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        _dude[2] = dude.group(dude.draw(dude3, {x:0, y:DIM*2*PIX}), dude.draw(bal1)).opacity(0);
-        _dude[3] = dude.group(dude.draw(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.draw(bal2, { x:0, y: 2*PIX })).opacity(0);
-        _dude[4] = dude.group(dude.flip(dude1, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        _dude[5] = dude.group(dude.flip(dude2, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        _dude[6] = dude.group(dude.flip(dude3, {x:0, y:DIM*2*PIX}), dude.flip(bal1)).opacity(0);
-        _dude[7] = dude.group(dude.flip(dude4, {x:0, y:DIM*2*PIX + 2*PIX}), dude.flip(bal2, { x:0, y: 2*PIX })).opacity(0);
-
-        player = dude.define('left',  [_dude[0], _dude[1], _dude[2], _dude[3]]);
-        player = dude.define('right', [_dude[4], _dude[5], _dude[6], _dude[7]]);
-        player.direction = 'left';
-
-        game.layers.sprites.add(player.sprite);
-
-        balloon = new Sprite(game, palette2, DIM, PIX);
-        _balloon = [
-            [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]],
-            [[bal3, { x:0, y: 0}], [bal5, { x:0, y: DIM*2*PIX }]],
-            [[bal3, { x:0, y: 0}], [bal5, { x:0, y: DIM*2*PIX }]],
-            [[bal3, { x:0, y: 0}], [bal4, { x:0, y: DIM*2*PIX }]]
-        ];
-
-        bolt = new Sprite(game, palette2, DIM, PIX*0.75);
-        _bolt = [
-            [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
-            [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
-            [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
-            [[[b[35], b[36], b[37], b[38]], { x:0, y: 0}]]
-        ];
-
-        water = new Sprite(game, palette3, DIM, PIX);
-        for(var i=0, l=game.bounds.right; i<l-DIM*PIX; i+=DIM*PIX){
-            var w = water.draw( [b[43], b[44], b[45], b[46]], { x:0, y:0} ).attr('class', 'water');
-            game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
-        }
-        waterline = stage.bbox().height-player.sprite.bbox().height*2
-
-        var title = function(){
-            var x = 150;
-            var y = 100;
-            var pix = PIX;
-            var t40 = new Sprite(game, palette5, 40, pix);
-            var t32 = new Sprite(game, palette5, 32, pix);
-            var t24 = new Sprite(game, palette5, 24, pix);
-            var t16 = new Sprite(game, palette5, 16, pix);
-            game.layers.title.rect('100%','100%').fill('#000');
-            game.layers.title.add(t32.draw(alpha.b, {x:x, y:y}));
-            game.layers.title.add(t32.draw(alpha.a, {x:x+32*pix,  y:y}));
-            game.layers.title.add(t24.draw(alpha.l, {x:x+64*pix,  y:y}));
-            game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix,  y:y}));
-            game.layers.title.add(t32.draw(alpha.o, {x:x+112*pix, y:y}));
-            game.layers.title.add(t32.draw(alpha.o, {x:x+144*pix, y:y}));
-            game.layers.title.add(t40.draw(alpha.n, {x:x+176*pix, y:y}));
-            game.layers.title.add(t32.draw(alpha.f, {x:x+56*pix, y:y+48*pix}));
-            game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix, y:y+48*pix}));
-            game.layers.title.add(t16.draw(alpha.i, {x:x+112*pix, y:y+48*pix}));
-            game.layers.title.add(t32.draw(alpha.g, {x:x+128*pix, y:y+48*pix}));
-            game.layers.title.add(t32.draw(alpha.h, {x:x+160*pix, y:y+48*pix}));
-            game.layers.title.add(t32.draw(alpha.t, {x:x+192*pix, y:y+48*pix}));
-            game.layers.title.text("PRESS SPACE")
-            .move(screen.bbox().cx, y+256)
-                .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
-            game.layers.title.text("©2019  PRETENDO")
-                .move(screen.bbox().cx, y+310)
-                .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
-        }
-
-        fish = new Sprite(game, palette4, DIM, PIX);
-        _fish[0] = fish.draw([b[57], b[58], b[59], b[60]], {x:0, y:0}).opacity(0);
-        _fish[1] = fish.draw([b[61], b[62], b[63], b[64]], {x:0, y:0}).opacity(0);
-        _fish[2] = fish.draw([b[65], b[66], b[67], b[68], b[69], b[70]], {x:0, y:0}).opacity(0);
-        _fish[3] = fish.draw([b[71], b[72], b[73], b[74]], {x:0, y:0}).opacity(0);
-        _fish[4] = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
-        _fish[5] = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
-        fishy    = fish.add(_fish[0], _fish[1], _fish[2], _fish[3], _fish[4], _fish[5]);
-
-        dead = dude.draw(dude5, {x:0, y:0});
-        dead.opacity(0);
-        electro = dude.draw(dude8, {x:0, y:0});
-        electro.opacity(0);
-
-        stand = dude.group(dude.draw(dude6), dude.draw(dude7, {x:0, y:DIM*PIX*2}));
-
-        game.layers.sprites.add(dead);
-        game.layers.sprites.add(stand);
-
-        start = {x: stage.x() + stage.bbox().width - player.sprite.bbox().width*3, y:stage.y() + stage.bbox().height/2 };
-        player.sprite.move(start.x, start.y - player.sprite.bbox().height-12);
-        stand.move(start.x, start.y - player.sprite.bbox().height);
-        platform = game.layers.background.rect(60, 20).radius(5).stroke({'width':PIX, 'color':'#ddd'}).move(start.x, start.y);
+        set_player();
+        set_sprites();
+        set_water();
+        set_fish();
+        set_stars();
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
         physics.speedRange(0, PIX*2);
 
+        set_controls();
+        set_display();
+        set_title();
+
+        game.start(function(){
+            game.layers.title.opacity(0);
+            game.layers.title.remove();
+
+            sound = new Sound(game);
+            sound.init([
+                {name: 'music',  src: 'sounds/trip.mp3'  },
+                {name: 'burst',  src: 'sounds/burst.mp3' },
+                {name: 'pause',  src: 'sounds/pause.mp3' },
+                {name: 'dead',   src: 'sounds/clear.mp3' },
+                {name: 'flap',   src: 'sounds/flap.mp3'  },
+                {name: 'fall',   src: 'sounds/fall.mp3'  },
+                {name: 'buzz',   src: 'sounds/buzz.wav'  },
+                {name: 'splash', src: 'sounds/splash.wav'}
+            ]);
+
+            sound.onload(function(){
+                delete game.layers.title;
+                // a little delay added for safari, so sound plays properly upon game start
+                setTimeout(function(){
+                    sound.loop('music', 0.5);
+                    control.unlock();
+                    game.run();
+                }, 200);
+            });
+
+            set_course();
+        });
+    };
+
+    var set_controls = function(){
         control = new Controller(game);
         control.init();
         control.lock();
@@ -189,10 +112,10 @@ var game,
             player.turn("right");
         });
 
-        control.set("a",     function(){
+        control.set("a", function(){
             if(!game.started && game.state=="running") game.started = true;
             game.frame = game.frame < 3 ? game.frame + 1 : 0;
-            dude.animate(game.frame);
+            player.animate(game.frame);
         });
 
         control.set("pause", function(event){
@@ -202,7 +125,6 @@ var game,
             if(this.game.state!=this.game.states["RUNNING"] && !game.started && !this.game.PAUSED){
                 this.game.start();
                 game.textbox.status.text("");
-                rank = 50;
             }
             else if(this.game.state=="game over"){
                 reset();
@@ -220,8 +142,10 @@ var game,
                 game.textbox.status.text("");
                 this.game.run();
             }
-        })
+        });
+    };
 
+    var set_display = function(){
         game.display('score', 10, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.display('top', screen.bbox().cx-80, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.display('rank', game.bounds.right-120, 10, {'family':'Press Start 2P', 'fill':'#fff', 'size':12});
@@ -230,37 +154,171 @@ var game,
         game.textbox.score.text("PLAYER: 0000000000");
         game.textbox.rank.text("RANK: 50");
         game.textbox.top.text('TOP: ' + "0".repeat(10 - String(top).length) + top);
+    };
 
-        game.start(function(){
-            game.layers.title.opacity(0);
-            game.layers.title.remove();
-            delete game.layers.title;
+    var set_player = function(){
+        var dude    = [],
+            frame   = [],
+            balloon = [];
 
-            sound = new Sound(game);
-            sound.init([
-                {name: 'music',  src: 'sounds/trip.mp3'  },
-                {name: 'burst',  src: 'sounds/burst.mp3' },
-                {name: 'pause',  src: 'sounds/pause.mp3' },
-                {name: 'dead',   src: 'sounds/clear.mp3' },
-                {name: 'flap',   src: 'sounds/flap.mp3'  },
-                {name: 'fall',   src: 'sounds/fall.mp3'  },
-                {name: 'buzz',   src: 'sounds/buzz.wav'  },
-                {name: 'splash', src: 'sounds/splash.wav'}
-            ]);
+        player = new Sprite(game, palette[0], DIM, PIX);
 
-            sound.onload(function(){
-                // a little delay added for safari, so sound plays properly on game start
-                setTimeout(function(){
-                    sound.loop('music', 0.5);
-                    control.unlock();
-                    game.run();
-                }, 200);
-            });
+        dude[0] = [b[0],  b[1],  b[2],  b[3]];
+        dude[1] = [b[0],  b[8],  b[2],  b[9]];
+        dude[2] = [b[0],  b[10], b[2],  b[11]];
+        dude[3] = [b[14], b[8],  b[2],  b[9]];
+        dude[4] = [b[39], b[40], b[41], b[42]];
+        dude[5] = [b[47], b[48], b[49], b[50]];
+        dude[6] = [b[51], b[52]];
+        dude[7] = [b[53], b[54], b[55], b[56]];
 
-            set_course();
-        });
+        balloon[0] = [b[4],  b[5], b[6],  b[7]];
+        balloon[1] = [b[12], b[5], b[13], b[7]];
 
-        title();
+        frame[0] = player.group(player.draw(dude[0], {x:0, y:DIM*2*PIX}), player.draw(balloon[0])).opacity(0);
+        frame[1] = player.group(player.draw(dude[1], {x:0, y:DIM*2*PIX}), player.draw(balloon[0])).opacity(0);
+        frame[2] = player.group(player.draw(dude[2], {x:0, y:DIM*2*PIX}), player.draw(balloon[0])).opacity(0);
+        frame[3] = player.group(player.draw(dude[3], {x:0, y:DIM*2*PIX + 2*PIX}), player.draw(balloon[1], { x:0, y: 2*PIX })).opacity(0);
+        frame[4] = player.group(player.flip(dude[0], {x:0, y:DIM*2*PIX}), player.flip(balloon[0])).opacity(0);
+        frame[5] = player.group(player.flip(dude[1], {x:0, y:DIM*2*PIX}), player.flip(balloon[0])).opacity(0);
+        frame[6] = player.group(player.flip(dude[2], {x:0, y:DIM*2*PIX}), player.flip(balloon[0])).opacity(0);
+        frame[7] = player.group(player.flip(dude[3], {x:0, y:DIM*2*PIX + 2*PIX}), player.flip(balloon[1], { x:0, y: 2*PIX })).opacity(0);
+
+        player = player.define('left',  [frame[0], frame[1], frame[2], frame[3]]);
+        player = player.define('right', [frame[4], frame[5], frame[6], frame[7]]);
+        player.direction = 'left';
+
+        game.layers.sprites.add(player.sprite);
+
+        player.dead = player.draw(dude[4], {x:0, y:0});
+        player.dead.opacity(0);
+        player.zapped = player.draw(dude[7], {x:0, y:0});
+        player.zapped.opacity(0);
+
+        player.standing = player.group(player.draw(dude[5]), player.draw(dude[6], {x:0, y:DIM*PIX*2}));
+
+        game.layers.sprites.add(player.dead);
+        game.layers.sprites.add(player.standing);
+
+        start = {x: stage.x() + stage.bbox().width - player.sprite.bbox().width*3, y:stage.y() + stage.bbox().height/2 };
+        player.sprite.move(start.x, start.y - player.sprite.bbox().height-12);
+        player.standing.move(start.x, start.y - player.sprite.bbox().height);
+
+        // draw start platform
+        game.layers.background.rect(60, 20).radius(5).stroke({'width':PIX, 'color':'#ddd'}).move(start.x, start.y);
+    };
+
+    var set_sprites = function(){
+        set_balloons();
+        set_bolts();
+    };
+
+    var set_water = function(){
+        var water = new Sprite(game, palette[2], DIM, PIX);
+        for(var i=0, l=game.bounds.right; i<l-DIM*PIX; i+=DIM*PIX){
+            var w = water.draw( [b[43], b[44], b[45], b[46]], { x:0, y:0} ).attr('class', 'water');
+            game.layers.foreground.add(w.move(i, game.bounds.bottom-DIM*PIX*2));
+        }
+        waterline = stage.bbox().height-player.sprite.bbox().height*2
+    };
+
+    var set_title = function(){
+        var x = 150;
+        var y = 100;
+        var pix = PIX;
+        var t40 = new Sprite(game, palette[4], 40, pix);
+        var t32 = new Sprite(game, palette[4], 32, pix);
+        var t24 = new Sprite(game, palette[4], 24, pix);
+        var t16 = new Sprite(game, palette[4], 16, pix);
+        game.layers.title.rect('100%','100%').fill('#000');
+        game.layers.title.add(t32.draw(alpha.b, {x:x, y:y}));
+        game.layers.title.add(t32.draw(alpha.a, {x:x+32*pix,  y:y}));
+        game.layers.title.add(t24.draw(alpha.l, {x:x+64*pix,  y:y}));
+        game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix,  y:y}));
+        game.layers.title.add(t32.draw(alpha.o, {x:x+112*pix, y:y}));
+        game.layers.title.add(t32.draw(alpha.o, {x:x+144*pix, y:y}));
+        game.layers.title.add(t40.draw(alpha.n, {x:x+176*pix, y:y}));
+        game.layers.title.add(t32.draw(alpha.f, {x:x+56*pix, y:y+48*pix}));
+        game.layers.title.add(t24.draw(alpha.l, {x:x+88*pix, y:y+48*pix}));
+        game.layers.title.add(t16.draw(alpha.i, {x:x+112*pix, y:y+48*pix}));
+        game.layers.title.add(t32.draw(alpha.g, {x:x+128*pix, y:y+48*pix}));
+        game.layers.title.add(t32.draw(alpha.h, {x:x+160*pix, y:y+48*pix}));
+        game.layers.title.add(t32.draw(alpha.t, {x:x+192*pix, y:y+48*pix}));
+        game.layers.title.text("PRESS SPACE")
+        .move(screen.bbox().cx, y+256)
+            .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+        game.layers.title.text("©2019  PRETENDO")
+            .move(screen.bbox().cx, y+310)
+            .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+    }
+
+    var set_fish = function(){
+        fish = new Sprite(game, palette[3], DIM, PIX);
+
+        frames.fish = [];
+        frames.fish[0] = fish.draw([b[57], b[58], b[59], b[60]], {x:0, y:0}).opacity(0);
+        frames.fish[1] = fish.draw([b[61], b[62], b[63], b[64]], {x:0, y:0}).opacity(0);
+        frames.fish[2] = fish.draw([b[65], b[66], b[67], b[68], b[69], b[70]], {x:0, y:0}).opacity(0);
+        frames.fish[3] = fish.draw([b[71], b[72], b[73], b[74]], {x:0, y:0}).opacity(0);
+        frames.fish[4] = fish.draw([b[75], b[76], b[77], b[78]], {x:0, y:0}).opacity(0);
+        frames.fish[5] = fish.draw([b[79], b[80], b[81], b[82]], {x:0, y:0}).opacity(0);
+        fish    = fish.add(frames.fish[0], frames.fish[1], frames.fish[2], frames.fish[3], frames.fish[4], frames.fish[5]);
+    };
+
+    var inactive = function(sprites){
+        return sprites.filter(function(item){ return !item.visible(); });
+    };
+
+    var set_bolts = function(){
+        var buzz;
+
+        bolt = new Sprite(game, palette[1], DIM, PIX*0.75);
+        frames.bolt = [
+            [[[b[23], b[24], b[25], b[26]], { x:0, y: 0}]],
+            [[[b[27], b[28], b[29], b[30]], { x:0, y: 0}]],
+            [[[b[31], b[32], b[33], b[34]], { x:0, y: 0}]],
+            [[[b[35], b[36], b[37], b[38]], { x:0, y: 0}]]
+        ];
+
+        for(i=0, l=16; i<l; i++){
+            buzz = bolt.factory('bolts', frames.bolt).position(0, 0).hide();
+            game.layers.objects.add(buzz.sprite.attr('class', 'bolt'));
+        }
+    };
+
+    var set_balloons = function(){
+        var bln, bal = [];
+
+        balloon = new Sprite(game, palette[1], DIM, PIX);
+
+        bal[0] = [b[15], b[16], b[17], b[18]];
+        bal[1] = [b[19], b[20]];
+        bal[2] = [b[21], b[22]];
+
+        frames.balloon = [
+            [[bal[0], { x:0, y: 0}], [bal[1], { x:0, y: DIM*2*PIX }]],
+            [[bal[0], { x:0, y: 0}], [bal[2], { x:0, y: DIM*2*PIX }]],
+            [[bal[0], { x:0, y: 0}], [bal[2], { x:0, y: DIM*2*PIX }]],
+            [[bal[0], { x:0, y: 0}], [bal[1], { x:0, y: DIM*2*PIX }]]
+        ];
+
+        for(i=0, l=8; i<l; i++){
+            bln = balloon.factory('balloons', frames.balloon).hide();
+            game.layers.objects.add(bln.sprite.move(0, 0).attr('class', 'balloon'));
+        }
+    };
+
+    var set_stars = function(){
+        for(i=0, l=15; i<l; i++){
+            var x = randomInt(0, stage.bbox().width),
+                y = randomInt(10, stage.bbox().height),
+
+            star = game.layers.background.rect(1,1).fill('#06f').attr('class', 'star').move(x, y).opacity(0);
+
+            if(i<6) star.move(x, y).opacity(1);
+
+            game.tiles.stars.push(star);
+        }
     };
 
     var set_course = function(){
@@ -275,14 +333,14 @@ var game,
         ];
 
         for(i=0, l=locs.length; i<l; i++){
-            buzz = bolt.factory('bolts', _bolt);
+            buzz = bolt.factory('bolts', frames.bolt);
             game.layers.objects.add(buzz.sprite.move(locs[i].x, locs[i].y).addClass('bolt'));
         }
 
         locs = [{x:x-4*w, y:y-2*w}, {x:x-w*15, y:y+w*3}, {x:x-w*15, y:y+w*16}, {x:x-4*w, y:y+w*13}];
 
         for(i=0, l=locs.length; i<l; i++){
-            bal = balloon.factory('balloons', _balloon);
+            bal = balloon.factory('balloons', frames.balloon);
             game.layers.objects.add(bal.sprite.move(locs[i].x, locs[i].y).addClass('balloon'));
         }
     };
@@ -295,131 +353,141 @@ var game,
     }
 
     var generate = function(){
-        var b,
-        total = game.cast.bolts.length + game.cast.balloons.length;
-        more = distance>50/* && total<20*/,
-        d1 = Math.random(),
-        d2 = Math.random(),
-        d3 = Math.random(),
-        d4 = Math.random(),
+        var x,
+            cl,
+            bolt,
+            bolts,
+            balloon,
+            balloons,
+            total = game.cast.bolts.length + game.cast.balloons.length,
+            d1 = Math.random(),
+            d2 = Math.random(),
+            d3 = Math.random(),
+            d4 = Math.random(),
 
-        y1 = randomInt(player.sprite.bbox().height, waterline),
-        y2 = randomInt(player.sprite.bbox().height/2, waterline + player.sprite.bbox().height),
-        y3 = randomInt(0, stage.bbox().height);
+            y1 = randomInt(player.height(), waterline),
+            y2 = randomInt(player.height()/2, waterline + player.height()),
+            y3 = randomInt(0, stage.bbox().height);
 
-        if(more){
-            if(d1<0.05){
-                b = balloon.factory('balloons', _balloon);
-                game.layers.objects.add(b.sprite.move(stage.x()-game.layers.objects.x(), y1).attr('class', 'balloon'));
+        ratio.balloon = distance>150 ? 0.05 : 0.03;
+        ratio.bolt    = distance>100 ? 0.25 : 0.15;
+        ratio.moving  = distance>250 ? 0.50 : 0.30;
+        ratio.star    = 0.3;
+
+        // generate balloons
+        if(d1<ratio.balloon){
+            balloons = inactive(game.cast.balloons);
+
+            if(balloons.length){
+                balloon = balloons[0];
+                x = stage.x()-game.layers.objects.x();
+
+                balloon.position(x, y1).show();
 
                 for(var i=0, l=game.cast.bolts.length; i<l; i++){
                     if(game.cast.bolts[i]!==undefined){
-                        if(b.collision(game.cast.bolts[i]))
-                            b.sprite.dmove(-game.cast.bolts[i].sprite.bbox().width*2, 0)
+                        if(balloon.collision(game.cast.bolts[i]))
+                            balloon.sprite.dmove(-game.cast.bolts[i].width()*2, 0)
                     }
                 }
             }
+        }
+        // generate bolts
+        if(d2<ratio.bolt){
+             bolts = inactive(game.cast.bolts);
 
-            if(d2<0.15){
-                var cl= 'bolt',
-                    buzz = bolt.factory('bolts', _bolt),
-                    x = stage.x()-game.layers.objects.x()-buzz.sprite.bbox().width*4;
+            if(bolts.length){
+                bolt = bolts[0];
+                x = stage.x()-game.layers.objects.x()-bolt.width()*4;
 
-                // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
-
-                if(distance>200 && d4<0.3){
+                if(distance>150 && d4<ratio.moving){
                     switch(randomInt(0,4)){
                         case 0:
-                            cl = "bolt N";
+                            cl = "N";
                             y2 = game.bounds.bottom;
                             break;
                         case 1:
-                            cl = "bolt S";
+                            cl = "S";
                             y2 = game.bounds.top;
                             break;
                         case 2:
-                            cl = "bolt NE";
+                            cl = "NE";
                             y2 = game.bounds.bottom;
                             break;
                         case 3:
-                            cl = "bolt SE";
+                            cl = "SE";
                             y2 = game.bounds.top;
                             break;
                         case 3:
-                            cl = "bolt E";
+                            cl = "E";
                             break;
                     }
-                    // buzz = bolt.factory('bolts', _bolt);
-                    // game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
+                    bolt.position(x, y2).classes(["bolt", cl]).show();
                 }
-
-                game.layers.objects.add(buzz.sprite.move(x, y2).addClass(cl));
-            }
-
-            if(d3<0.3){
-                var star = game.layers.background.rect(1,1).move(0, y3).fill('#06f').attr('class', 'star');
+                else{
+                    bolt.position(x, y2).class("bolt").show();
+                }
             }
         }
 
-        game.layers.objects.select('.balloon').each(function(c, children){
-            var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
-            if(exit){
-                for(var i=0, l=game.cast.balloons.length; i<l; i++){
-                    if(game.cast.balloons[i]!==undefined && game.cast.balloons[i].sprite===children[c])
-                        delete game.cast.balloons[i]
+        if(d3<ratio.star){
+            for(var i=0, l=game.tiles.stars.length; i<l; i++){
+                var star = game.tiles.stars[i];
+                if(star.opacity()===0){
+                    star.opacity(1).move(0, y3);
+                    break;
                 }
-                children[c].remove();
-                delete children[c];
             }
-        });
+        }
 
-        game.layers.objects.select('.bolt').each(function(c, children){
-            var exit = stage.bbox().width - (children[c].x()+game.layers.objects.x()) < 0;
-            var exitN = children[c].y() < 0;
-            var exitS = stage.bbox().height - (children[c].y()+game.layers.objects.y()) < 0;
-            if(exit || exitN || exitS){
-                for(var i=0, l=game.cast.bolts.length; i<l; i++){
-                    if(game.cast.bolts[i]!==undefined && game.cast.bolts[i].sprite===children[c])
-                        delete game.cast.bolts[i]
-                }
-                children[c].remove();
-                delete children[c];
-            }
-        });
+        for(var i=0, l=game.cast.balloons.length; i<l; i++){
+            var balloon = game.cast.balloons[i];
+            var exit = stage.bbox().width - (balloon.sprite.x()+game.layers.objects.x()) < 0;
+            if(exit) game.cast.balloons[i].hide();
+        }
+
+        for(var i=0, l=game.cast.bolts.length; i<l; i++){
+            var bolt  = game.cast.bolts[i];
+            var exit  = stage.bbox().width - (bolt.sprite.x()+game.layers.objects.x()) < 0;
+            var exitN = bolt.sprite.y() < 0;
+            var exitS = stage.bbox().height - (bolt.sprite.y()+game.layers.objects.y()) < 0;
+            if(exit || exitN || exitS) game.cast.bolts[i].hide();
+        }
     };
 
     var update = function(){
+        var digits;
         if( control.pressed("RIGHT") ){
-            if(stand.opacity())
-                stand.opacity(0);
+            if(player.standing.opacity())
+                player.standing.opacity(0);
 
-            if(control.direction=="right" && game.counter%40===0)
-                physics.accelerate(PIX*2);
+            if(control.direction=="right")
+                physics.accelerate(PIX/2);
             else if(control.direction=="left")
-                physics.decelerate(PIX/2);
+                physics.decelerate(PIX);
 
             if(!control.pressed("A"))
-                dude.animate(game.frame);
+                player.animate(game.frame);
         }
 
         if( control.pressed("LEFT") ){
-            if(stand.opacity())
-                stand.opacity(0);
+            if(player.standing.opacity())
+                player.standing.opacity(0);
 
-            if(control.direction=="left" && game.counter%40===0)
-                physics.accelerate(PIX/2);
+            if(control.direction=="left")
+                physics.accelerate(PIX/8);
             else if(control.direction=="right")
-                physics.decelerate(PIX*1.5);
+                physics.decelerate(PIX/2);
 
             if(!control.pressed("A"))
-                dude.animate(game.frame);
+                player.animate(game.frame);
         }
 
         if( control.pressed("A") ){
-            if(stand.opacity())
-                stand.opacity(0);
+            if(player.standing.opacity())
+                player.standing.opacity(0);
 
-            dude.animate(game.frame);
+            player.animate(game.frame);
 
             if(game.counter%10===0){
                 sound.audio.flap.time = 0;
@@ -430,9 +498,7 @@ var game,
         generate();
 
         for(var i=0, l=game.cast.bolts.length; i<l; i++){
-            if(game.cast.bolts[i]!==undefined){
-                game.cast.bolts[i].animate(game.frame);
-            }
+            game.cast.bolts[i].animate(game.frame);
         }
 
         if(game.counter%20===0){
@@ -449,8 +515,7 @@ var game,
             }
             else{
                 top = game.score;
-                rank = 1;
-                game.textbox.rank.text("RANK: " + rank);
+                game.textbox.rank.text("RANK: 1");
                 digits = String(game.score).length;
                 digits = 10 - digits;
                 game.textbox.top.text('TOP: ' + "0".repeat(digits) + game.score);
@@ -474,6 +539,7 @@ var game,
     };
 
     var tween = function(){
+        var digits;
         if(low_alt_duration>1500){
             eaten();
         }
@@ -524,35 +590,24 @@ var game,
                     gravity.update();
                 physics.vector.direction = 'S';
             }
+
             scroll();
 
             for(var i=0, l=game.cast.balloons.length; i<l; i++){
-                if(game.cast.balloons[i]!==undefined){
+                if(player.collision(game.cast.balloons[i]) && game.cast.balloons[i].visible()){
+                    sound.play('burst');
+                    game.cast.balloons[i].hide();
 
-                    if(player.collision(game.cast.balloons[i])){
-                        // sound.audio.burst.time = 0;
-                        // sound.audio.burst.playing = false;
-                        sound.play('burst');
-
-                        game.cast.balloons[i].sprite.remove();
-                        delete game.cast.balloons[i];
-
-                        game.score += 300;
-                        digits = String(game.score).length;
-                        digits = 10 - digits;
-                        game.textbox.score.text('PLAYER: ' + "0".repeat(digits) + game.score);
-                    }
+                    game.score += 300;
+                    digits = String(game.score).length;
+                    digits = 10 - digits;
+                    game.textbox.score.text('PLAYER: ' + "0".repeat(digits) + game.score);
                 }
             }
 
-            cleanup(game.cast.balloons);
-            cleanup(game.cast.bolts);
-
             for(var i=0, l=game.cast.bolts.length; i<l; i++){
-                if(game.cast.bolts[i]!==undefined){
-                    if(player.collision(game.cast.bolts[i])){
-                        gameover();
-                    }
+                if(player.collision(game.cast.bolts[i])){
+                    gameover();
                 }
             }
 
@@ -560,12 +615,6 @@ var game,
                 gravity.float(DELAY);
         }
     };
-
-    var cleanup = function(items){
-        for(var i=0, l=items.length; i<l; i++)
-            if(items[i]===undefined)
-                items.splice(i, 1);
-    }
 
     var scroll = function(){
         var items = game.layers.objects.children();
@@ -600,21 +649,20 @@ var game,
         }
 
         for(var i=0, l=background.length; i<l; i++){
-            background[i].dmove(PIX*0.50);
+            background[i].dmove(PIX*0.5);
             if(background[i].x()>=game.bounds.right){
-                background[i].remove();
-                delete background[i];
+                background[i].opacity(0);
             }
         }
 
         if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
-            stand.dmove(PIX/2);
+            player.standing.dmove(PIX/2);
             player.move(PIX/2);
         }
         if(player.position().x==game.bounds.right-player.sprite.bbox().width){
             game.started = true;
-            stand.opacity(0);
-            dude.animate(game.frame);
+            player.standing.opacity(0);
+            player.animate(game.frame);
         }
     };
 
@@ -622,31 +670,31 @@ var game,
         game.state = game.states.GAME_OVER;
         sound.stop('music');
         sound.loop('buzz');
-        dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
+        player.dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
         player.sprite.opacity(0);
         var buzzing = true;
 
         var electrocute = function(){
             if(Date.now()%2===0 && buzzing){
-                electro.move(dead.x(), dead.y())
-                dead.opacity(0);
-                electro.opacity(1);
+                player.zapped.move(player.dead.x(), player.dead.y())
+                player.dead.opacity(0);
+                player.zapped.opacity(1);
             }
             else{
-                dead.opacity(1);
-                electro.opacity(0);
+                player.dead.opacity(1);
+                player.zapped.opacity(0);
             }
 
             if(buzzing) requestAnimationFrame(electrocute);
         }
 
-        dead.animate(600).dmove(0, -2*dead.bbox().height);
+        player.dead.animate(600).dmove(0, -2*player.dead.bbox().height);
         requestAnimationFrame(electrocute);
 
         setTimeout(function(){
             sound.stop('buzz');
             buzzing = false;
-            dead.animate().dmove(0, game.bounds.bottom-player.sprite.y()+dead.bbox().height);
+            player.dead.animate().dmove(0, game.bounds.bottom-player.sprite.y()+player.dead.bbox().height);
             setTimeout(function(){ sound.play('fall', 0.3); }, 200);
             setTimeout(function(){ sound.stop('fall'); }, 1200);
             setTimeout(function(){
@@ -659,22 +707,22 @@ var game,
 
     var fish_animation = function(f){
         requestAnimationFrame(function(){
-            if(game.counter%10===0 && fishy.frame<fishy.frames.length)
-                fishy.frame++;
+            if(game.counter%10===0 && fish.frame<fish.frames.length)
+                fish.frame++;
         });
 
-        if(fishy.frame===0)
-            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-        else if(fishy.frame==1)
-            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-        else if(fishy.frame==2)
-            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-        else if(fishy.frame==3)
-            fishy.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-        else if(fishy.frame==4)
-            fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
-        else if(fishy.frame==5)
-            fishy.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+        if(fish.frame===0)
+            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+        else if(fish.frame==1)
+            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+        else if(fish.frame==2)
+            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+        else if(fish.frame==3)
+            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+        else if(fish.frame==4)
+            fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+        else if(fish.frame==5)
+            fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
     };
 
     var eaten = function(){
@@ -682,21 +730,21 @@ var game,
             sound.stop('music');
             sound.play('splash');
             player.sprite.opacity(0);
-            dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height);
+            player.dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height);
             game.state = game.states.END_LOOP;
         }
 
-        if(fishy.frame==4){
-            dead.opacity(0);
-            dead.remove();
+        if(fish.frame==4){
+            player.dead.opacity(0);
+            player.dead.remove();
         }
         else{
-            dead.opacity(1);
+            player.dead.opacity(1);
         }
 
-        fishy.animate(fishy.frame, fish_animation);
+        fish.animate(fish.frame, fish_animation);
 
-        if(fishy.frame>=fishy.frames.length){
+        if(fish.frame>=fish.frames.length){
             sound.play('dead', 0.4);
             game.state = game.states.GAME_OVER;
             game.textbox.status.text("GAME OVER");

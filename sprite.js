@@ -62,7 +62,7 @@ function Sprite(game, palette, dim, pix){
         var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
 
         for(var i=0, l=frames.length; i<l; i++){
-            if(i===f)
+            if(i===f && this.visible())
                 frames[i].opacity(1);
             else
                 frames[i].opacity(0);
@@ -99,10 +99,31 @@ function Sprite(game, palette, dim, pix){
 
     this.move = function(x, y){
         this.box.dmove(x, y);
+        return this;
     };
 
-    this.position = function(){
+    this.position = function(x, y){
+        if(x!==undefined && y!== undefined){
+            this.box.move(x, y);
+            return this;
+        }
         return {x: this.box.cx(), y:this.box.cy()}
+    };
+
+    this.class = function(name){
+        this.box.attr('class', name);
+        return this;
+    };
+
+    this.classes = function(replace){
+        var classes = this.box.classes();
+        for(var i=0, l=classes.length; i<l; i++){
+            this.box.removeClass(classes[i]);
+        }
+        for(var i=0, l=replace.length; i<l; i++){
+            this.box.addClass(replace[i]);
+        }
+        return this;
     };
 
     this.factory = function(name, bitmaps){
@@ -175,6 +196,8 @@ function Sprite(game, palette, dim, pix){
     this.show = function(){
         var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
         frames[game.frame].opacity(1);
+        this.hidden = false;
+        return this;
     };
 
     this.hide = function(){
@@ -182,11 +205,29 @@ function Sprite(game, palette, dim, pix){
         for(var i=0, l=frames.length; i<l; i++){
             frames[i].opacity(0);
         }
+        this.hidden = true;
+        return this;
+    };
+
+    this.visible = function(){
+        if(this.visible===undefined){
+            var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
+            return frames.every(function(item){return item.opacity()===0;})
+        }
+        return !this.hidden;
     };
 
     this.turn = function(direction){
         this.hide();
         this.direction = direction;
         this.show();
+    };
+
+    this.width = function(){
+        return this.sprite.bbox().width;
+    };
+
+    this.height = function(){
+        return this.sprite.bbox().height;
     };
 }
