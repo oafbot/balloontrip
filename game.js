@@ -7,6 +7,7 @@ function Game(screen){
     this.started = false;
     this.screen = screen;
     this.time = 0;
+    this.storage = window.localStorage;
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
@@ -53,9 +54,6 @@ function Game(screen){
     }
 
     this.loop = function(timestamp){
-        // if(self.time === 0)
-        //     self.time = timestamp;
-
         if(!self.PAUSED && self.state!="game over"){
             if(self.counter%KEYFRAME===0){
                 self.update();
@@ -71,7 +69,10 @@ function Game(screen){
     this.clock = function(timestamp) {
         this.delta = this.time>0 ? timestamp - this.time : 0;
         this.time  = timestamp;
-        // if(this.delta>15){
+        // if(this.delta>24){
+        //     this.tween();
+        //     this.time = timestamp;
+        // }
         this.counter++;
         // }
     };

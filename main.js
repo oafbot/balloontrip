@@ -16,15 +16,16 @@ var game,
     balloon,
     stage,
     start,
+    top,
     waterline = 0,
     low_alt = false,
     low_alt_timer = 0,
     low_alt_duration = 0,
     distance = 0,
+    top = window.localStorage.getItem('BalloonTrip.hiscore'),
     ratio  = {},
     frames = {},
     screen = SVG('screen').attr('id', 'game'),
-    top = top===undefined ? TOP : top,
     b = bitmap,
     palette = [
         [null, '#f06', '#06f', '#fc9'],
@@ -50,6 +51,8 @@ var game,
 
         game.util   = new Utilities(game);
         game.events = new EventRegistry(game);
+
+        top = top===null ? TOP : top;
 
         set_player();
         set_sprites();
@@ -519,6 +522,7 @@ var game,
                 digits = String(game.score).length;
                 digits = 10 - digits;
                 game.textbox.top.text('TOP: ' + "0".repeat(digits) + game.score);
+                game.storage.setItem('BalloonTrip.hiscore', top);
             }
         }
 
