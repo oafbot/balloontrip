@@ -16,12 +16,11 @@ var game,
     balloon,
     stage,
     start,
-    top,
-    waterline = 0,
-    low_alt = false,
-    low_alt_timer = 0,
-    low_alt_duration = 0,
-    distance = 0,
+    low_alt,
+    low_alt_timer,
+    low_alt_duration,
+    distance,
+    waterline,
     top = window.localStorage.getItem('BalloonTrip.hiscore'),
     ratio  = {},
     frames = {},
@@ -37,6 +36,10 @@ var game,
 
     var init = function(){
         document.getElementById('screen').style.cursor = 'none';
+        low_alt = false;
+        low_alt_timer = 0;
+        low_alt_duration = 0;
+        distance = 0;
 
         stage = screen.rect(800, 480).attr('id', 'backdrop');
         stage.fill('#000');
@@ -268,10 +271,6 @@ var game,
         fish    = fish.add(frames.fish[0], frames.fish[1], frames.fish[2], frames.fish[3], frames.fish[4], frames.fish[5]);
     };
 
-    var inactive = function(sprites){
-        return sprites.filter(function(item){ return !item.visible(); });
-    };
-
     var set_bolts = function(){
         var buzz;
 
@@ -354,6 +353,10 @@ var game,
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min)) + min;
     }
+
+    var inactive = function(sprites){
+        return sprites.filter(function(item){ return !item.visible(); });
+    };
 
     var generate = function(){
         var x,
@@ -710,49 +713,49 @@ var game,
     };
 
     var fish_animation = function(f){
-        requestAnimationFrame(function(){
-            if(game.counter%10===0 && fish.frame<fish.frames.length)
-                fish.frame++;
-        });
+        var interval = 1000/20;
 
-        if(fish.frame===0)
-            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-        else if(fish.frame==1)
-            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
-        else if(fish.frame==2)
-            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-        else if(fish.frame==3)
-            fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
-        else if(fish.frame==4)
-            fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
-        else if(fish.frame==5)
-            fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+        // requestAnimationFrame(function(timestamp){
+        if(fish.frame<fish.frames.length){
+            if(fish.frame===0)
+                fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+            else if(fish.frame==1)
+                fish.sprite.move(player.sprite.x() - player.sprite.bbox().width, waterline + player.sprite.bbox().height + (DIM*PIX)/4);
+            else if(fish.frame==2){
+                player.sprite.opacity(0);
+                player.dead.opacity(1);
+                fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.75, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+            }
+            else if(fish.frame==3)
+                fish.sprite.move(player.sprite.x() - player.sprite.bbox().width*0.5, waterline + player.sprite.bbox().height-(DIM*PIX)/2);
+            else if(fish.frame==4){
+                fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+                player.dead.opacity(0);
+                player.dead.remove();
+            }
+            else if(fish.frame==5)
+                fish.sprite.move(player.sprite.x(), waterline + player.sprite.bbox().height - (DIM*PIX)/2);
+
+            fish.frame++;
+            // fish.animate(fish.frame, fish_animation);
+        }
+        else if(fish.frame>=fish.frames.length){
+            sound.play('dead', 0.4);
+            game.state = game.states.GAME_OVER;
+            game.textbox.status.text("GAME OVER");
+            setTimeout(reset, 5000);
+        }
+        // });
     };
 
     var eaten = function(){
         if(game.state!=game.states.END_LOOP){
             sound.stop('music');
             sound.play('splash');
-            player.sprite.opacity(0);
             player.dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height);
             game.state = game.states.END_LOOP;
-        }
-
-        if(fish.frame==4){
-            player.dead.opacity(0);
-            player.dead.remove();
-        }
-        else{
-            player.dead.opacity(1);
-        }
-
-        fish.animate(fish.frame, fish_animation);
-
-        if(fish.frame>=fish.frames.length){
-            sound.play('dead', 0.4);
-            game.state = game.states.GAME_OVER;
-            game.textbox.status.text("GAME OVER");
-            setTimeout(reset, 5000);
+            // fish.animate(fish.frame, fish_animation);
+            game.add(function(){ fish.animate(fish.frame, fish_animation); }, 'update');
         }
     }
 

@@ -58,7 +58,7 @@ function Sprite(game, palette, dim, pix){
         return frame;
     }
 
-    this.animate = function(f, fn){
+    this.animate = function(f, fn, timestamp){
         var frames = this.direction===undefined ? this.frames : this.directions[this.direction];
 
         for(var i=0, l=frames.length; i<l; i++){
@@ -68,7 +68,7 @@ function Sprite(game, palette, dim, pix){
                 frames[i].opacity(0);
         }
         if(fn!==undefined)
-            fn(f);
+            fn(f, timestamp);
     }
 
     this.group = function(sprite1, sprite2){

@@ -8,6 +8,9 @@ function Game(screen){
     this.screen = screen;
     this.time = 0;
     this.storage = window.localStorage;
+    this.fps = 32;
+    this.interval = 1000/this.fps;
+    this.timestamp = 0;
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};
@@ -37,13 +40,13 @@ function Game(screen){
         "GAME_OVER" : "game over"
     };
 
-    this.update = function(){
+    this.update = function(timestamp){
         for(var i=0, l=this.queue.update.length; i<l; i++){
             this.queue.update[i]();
         }
     };
 
-    this.tween = function(){
+    this.tween = function(timestamp){
         for(var i=0, l=this.queue.tween.length; i<l; i++){
             this.queue.tween[i]();
         }
@@ -54,27 +57,28 @@ function Game(screen){
     }
 
     this.loop = function(timestamp){
+        if(self.time===0)
+            self.time = timestamp;
+        self.timestamp = timestamp;
+
         if(!self.PAUSED && self.state!="game over"){
+            self.clock(timestamp);
+
             if(self.counter%KEYFRAME===0){
                 self.update();
                 self.frame = self.frame < 3 ? self.frame + 1 : 0;
-            }else{
+            }else if(self.delta>self.interval){
                 self.tween();
+                self.time = timestamp - (self.time%self.interval);
             }
-            self.clock(timestamp);
             requestAnimationFrame(self.loop);
         }
     };
 
     this.clock = function(timestamp) {
         this.delta = this.time>0 ? timestamp - this.time : 0;
-        this.time  = timestamp;
-        // if(this.delta>24){
-        //     this.tween();
-        //     this.time = timestamp;
-        // }
         this.counter++;
-        // }
+        // self.time = timestamp;
     };
 
     this.run = function(){
