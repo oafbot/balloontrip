@@ -4,6 +4,8 @@ const DIM = 8;
 const GRAVITY = 0.12;
 const DELAY = 350;
 const TOP = 25000;
+const WIDTH = 800;
+const HEIGHT = 480;
 
 var game,
     physics,
@@ -41,7 +43,7 @@ var game,
         low_alt_duration = 0;
         distance = 0;
 
-        stage = screen.rect(800, 480).attr('id', 'backdrop');
+        stage = screen.rect(WIDTH, HEIGHT).attr('id', 'backdrop');
         stage.fill('#000');
 
         game = new Game(screen);
@@ -108,20 +110,20 @@ var game,
 
         control.set("left",  function(){
             if(!game.started && game.state=="running") game.started = true;
-            physics.momentum = physics.basespeed;
+            physics.momentum = control.direction==="right" ? physics.basespeed : physics.momentum;
             player.turn("left");
         });
 
         control.set("right", function(){
             if(!game.started && game.state=="running") game.started = true;
-            physics.momentum = physics.basespeed;
+            physics.momentum = control.direction==="left" ? physics.basespeed : physics.momentum;
             player.turn("right");
         });
 
         control.set("a", function(){
             if(!game.started && game.state=="running") game.started = true;
             game.frame = game.frame < 3 ? game.frame + 1 : 0;
-            player.animate(game.frame);
+            // player.animate(game.frame);
         });
 
         control.set("pause", function(event){
@@ -132,8 +134,11 @@ var game,
                 this.game.start();
                 game.textbox.status.text("");
             }
-            else if(this.game.state=="game over"){
+            else if(this.game.state=="game over" && !control.locked()){
                 reset();
+            }
+            else if(this.game.state=="game over" || this.game.state=="end loop"){
+                // pass
             }
             else if(!this.game.PAUSED){
                 this.game.pause();
@@ -236,7 +241,7 @@ var game,
         var t32 = new Sprite(game, palette[4], 32, pix);
         var t24 = new Sprite(game, palette[4], 24, pix);
         var t16 = new Sprite(game, palette[4], 16, pix);
-        game.layers.title.rect('100%','100%').fill('#000');
+        game.layers.title.rect(WIDTH,HEIGHT).fill('#000');
         game.layers.title.add(t32.draw(alpha.b, {x:x, y:y}));
         game.layers.title.add(t32.draw(alpha.a, {x:x+32*pix,  y:y}));
         game.layers.title.add(t24.draw(alpha.l, {x:x+64*pix,  y:y}));
@@ -464,9 +469,6 @@ var game,
     var update = function(){
         var digits;
         if( control.pressed("RIGHT") ){
-            if(player.standing.opacity())
-                player.standing.opacity(0);
-
             if(control.direction=="right")
                 physics.accelerate(PIX/2);
             else if(control.direction=="left")
@@ -477,9 +479,6 @@ var game,
         }
 
         if( control.pressed("LEFT") ){
-            if(player.standing.opacity())
-                player.standing.opacity(0);
-
             if(control.direction=="left")
                 physics.accelerate(PIX/8);
             else if(control.direction=="right")
@@ -490,9 +489,6 @@ var game,
         }
 
         if( control.pressed("A") ){
-            if(player.standing.opacity())
-                player.standing.opacity(0);
-
             player.animate(game.frame);
 
             if(game.counter%10===0){
@@ -545,15 +541,23 @@ var game,
         }
     };
 
+    var firstmove = function(){
+        if( player.standing.opacity() && control.pressed("RIGHT") || control.pressed("LEFT") || control.pressed("A")){
+            player.standing.opacity(0);
+        }
+    }
+
     var tween = function(){
         var digits;
+
+        firstmove();
+
         if(low_alt_duration>1500){
             eaten();
         }
         else{
             if( !physics.vector.bouncing && control.pressed("RIGHT") ){
                 control.direction = "right";
-
                 physics.vector.direction = control.pressed("A") ? 'NE' : 'E';
 
                 if(player.sprite.cx()<game.bounds.right && !gravity.grounded && game.state==game.states.RUNNING){
@@ -566,9 +570,7 @@ var game,
 
             if( !physics.vector.bouncing && control.pressed("LEFT") ){
                 control.direction = "left";
-
                 physics.vector.direction = control.pressed("A") ? 'NW' : 'W';
-
 
                 if(player.sprite.cx()>game.bounds.left && !gravity.grounded && game.state==game.states.RUNNING){
                     player.move(-physics.momentum, 0);
@@ -675,6 +677,7 @@ var game,
 
     var gameover = function(){
         game.state = game.states.GAME_OVER;
+        control.lock();
         sound.stop('music');
         sound.loop('buzz');
         player.dead.move(player.sprite.x(), player.sprite.y()).opacity(1);
@@ -707,6 +710,7 @@ var game,
             setTimeout(function(){
                 sound.play('dead', 0.4);
                 game.textbox.status.text("GAME OVER");
+                control.unlock();
                 setTimeout(reset, 5000);
             }, 1200);
         }, 800);
@@ -743,6 +747,7 @@ var game,
             sound.play('dead', 0.4);
             game.state = game.states.GAME_OVER;
             game.textbox.status.text("GAME OVER");
+            control.unlock();
             setTimeout(reset, 5000);
         }
         // });
@@ -750,6 +755,7 @@ var game,
 
     var eaten = function(){
         if(game.state!=game.states.END_LOOP){
+            control.lock();
             sound.stop('music');
             sound.play('splash');
             player.dead.move(player.sprite.x(),  waterline + player.sprite.bbox().height);
@@ -775,6 +781,92 @@ var game,
         game.add(update, 'update');
         game.add(tween, 'tween');
     };
+
+    // window.toggleFullscreen = function(){
+    //     // var doc = document.documentElement,
+    //     // // body = doc.getElementsByTagName('body')[0],
+    //     // x = window.innerWidth || doc.clientWidth || document.body.clientWidth,
+    //     // y = window.innerHeight|| doc.clientHeight|| document.body.clientHeight;
+    //     var w = WIDTH,
+    //         h = HEIGHT,
+    //         div = document.getElementById("screen"),
+    //         x = div.offsetLeft;// screen.bbox().cx,
+    //         y = div.offsetTop;//screen.bbox().cy,
+    //         viewport = document.getElementById("game");
+    //         ratio = window.screen.width / w;
+
+    //     console.log(viewport);
+    //     if(!document.fullscreenElement){
+    //         viewport.requestFullscreen().catch(err => {
+    //             alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+    //         });
+    //     }
+    //     else {
+    //         document.exitFullscreen();
+    //     }
+
+    //     document.addEventListener('fullscreenchange', (event) => {
+    //         // document.fullscreenElement will point to the element that
+    //         // is in fullscreen mode if there is one. If there isn't one,
+    //         // the value of the property is null.
+    //         console.log(x,y)
+    //         if(document.fullscreenElement){
+    //             // transform: scale(0.1);
+    //             // transform-origin: 0% 0% 0px;
+
+    //             zoom(ratio, viewport);
+    //             // screen.scale(ratio);
+    //             // for(var l in game.layers){
+    //             //     game.layers[l].scale(ratio);
+    //             //     game.layers[l].move(screen.x(), screen.y());
+    //             //     // game.layers[l].y(0);
+    //             // }
+    //             // document.getElementById("game").offsetLeft = 0;
+    //             // document.getElementById("game").offsetTop = 0;
+    //             // screen.translate(ratio*(window.screen.width-x)/2, ratio*(window.screen.height-y)/2).scale(ratio);
+    //             // screen.scale(ratio).translate(-(window.screen.width/2 + (w*ratio)/2), -(window.screen.height/2 + (h*ratio)/2))
+    //             screen.translate((w*ratio)/2 - x/2, (h*ratio)/2 - y/2);
+    //             // screen.x();
+    //             // screen.y();
+    //             // screen.scale(ratio);
+    //             // document.getElementById("screen").style="border:none";
+    //         }
+    //         else{
+    //             // screen.scale(1);
+    //             // document.getElementById("game").offsetLeft = -x;
+    //             // document.getElementById("game").offsetTop = -y;
+    //             // document.getElementById("game").offsetLeft = x;
+    //             // document.getElementById("game").offsetTop = y;
+    //             // .translate(x - (w*ratio)/2, y - (h*ratio)/2)
+    //             // screen.translate(-((w/2)*ratio)/2, -((h/2)*ratio)/2);
+    //             // screen.translate(x-((w/2)*ratio)/2, y-((h/2)*ratio)/2).scale(1);
+    //             // screen.translate(-w/2+x/ratio, -h/2+y/ratio).scale(1);
+    //             zoom(1, viewport);
+    //             // screen.scale(1);
+    //             // for(var l in game.layers){
+    //             //     game.layers[l].scale(1);
+    //             //     game.layers[l].move(screen.x(), screen.y());
+    //             // }
+    //         }
+    //     });
+    // }
+
+    // function zoom(zoom,el) {
+    //   transformOrigin = [0,0];
+    //     el = el || instance.getContainer();
+    //     var p = ["webkit", "moz", "ms", "o"],
+    //         s = "scale(" + zoom + ")",
+    //         oString = (transformOrigin[0] * 100) + "% " + (transformOrigin[1] * 100) + "%";
+
+    //     for (var i = 0; i < p.length; i++) {
+    //         el.style[p[i] + "Transform"] = s;
+    //         el.style[p[i] + "TransformOrigin"] = oString;
+    //     }
+
+    //     el.style["transform"] = s;
+    //     el.style["transformOrigin"] = oString;
+
+    // }
 
     init();
     run();
