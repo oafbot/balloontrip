@@ -6,6 +6,7 @@ const DELAY = 350;
 const TOP = 25000;
 const WIDTH = 800;
 const HEIGHT = 480;
+const SCROLL = PIX/2;
 
 var game,
     physics,
@@ -67,7 +68,7 @@ var game,
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
-        physics.speedRange(0, PIX*2);
+        physics.speedRange(0, SCROLL*4);
 
         set_controls();
         set_display();
@@ -470,12 +471,9 @@ var game,
         var digits;
         if( control.pressed("RIGHT") ){
             if(control.direction=="right")
-                physics.accelerate(PIX/2);
+                physics.accelerate(SCROLL);
             else if(control.direction=="left")
                 physics.momentum = physics.basespeed;
-                // while(physics.momentum>physics.basespeed){
-                //     physics.decelerate(PIX);
-                // }
 
             if(!control.pressed("A"))
                 player.animate(game.frame);
@@ -483,19 +481,15 @@ var game,
 
         if( control.pressed("LEFT") ){
             if(control.direction=="left")
-                physics.accelerate(PIX/8);
+                physics.accelerate(SCROLL/4);
             else if(control.direction=="right")
                 physics.momentum = physics.basespeed;
-                // while(physics.momentum>physics.basespeed){
-                //     physics.decelerate(PIX/2);
-                // }
 
             if(!control.pressed("A"))
                 player.animate(game.frame);
         }
 
         if( control.pressed("A") ){
-            // player.animate(game.frame);
             if(game.frame==2){
                 sound.audio.flap.time = 0;
                 sound.play('flap');
@@ -588,9 +582,12 @@ var game,
 
             if( !physics.vector.bouncing && control.pressed("A") ){
                 if(!control.pressed('RIGHT') && !control.pressed('LEFT')){
-                    physics.momentum = 0;
+                    physics.decelerate(SCROLL/2);
                     control.direction = "up";
                     physics.vector.direction = 'N';
+
+                    if(player.direction=="right")
+                        player.move(SCROLL+physics.momentum, 0);
                 }
 
                 if(player.sprite.cy() < game.bounds.top){
@@ -664,15 +661,15 @@ var game,
         }
 
         for(var i=0, l=background.length; i<l; i++){
-            background[i].dmove(PIX*0.5);
+            background[i].dmove(SCROLL);
             if(background[i].x()>=game.bounds.right){
                 background[i].opacity(0);
             }
         }
 
         if(!game.started && player.position().x<game.bounds.right-player.sprite.bbox().width){
-            player.standing.dmove(PIX/2);
-            player.move(PIX/2);
+            player.standing.dmove(SCROLL);
+            player.move(SCROLL);
         }
         if(player.position().x==game.bounds.right-player.sprite.bbox().width){
             game.started = true;
@@ -724,7 +721,6 @@ var game,
 
     var fish_animation = function(f){
         var interval = 1000/20;
-
         // requestAnimationFrame(function(timestamp){
         if(fish.frame<fish.frames.length){
             if(fish.frame===0)
