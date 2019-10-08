@@ -123,7 +123,7 @@ var game,
         control.set("a", function(){
             if(!game.started && game.state=="running") game.started = true;
             game.frame = game.frame < 3 ? game.frame + 1 : 0;
-            // player.animate(game.frame);
+            player.animate(game.frame);
         });
 
         control.set("pause", function(event){
@@ -489,9 +489,8 @@ var game,
         }
 
         if( control.pressed("A") ){
-            player.animate(game.frame);
-
-            if(game.counter%10===0){
+            // player.animate(game.frame);
+            if(game.frame==2){
                 sound.audio.flap.time = 0;
                 sound.play('flap');
             }
@@ -544,6 +543,7 @@ var game,
     var firstmove = function(){
         if( player.standing.opacity() && control.pressed("RIGHT") || control.pressed("LEFT") || control.pressed("A")){
             player.standing.opacity(0);
+            player.animate(game.frame);
         }
     }
 
