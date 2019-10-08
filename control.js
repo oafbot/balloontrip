@@ -1,5 +1,5 @@
 function Controller(game){
-    var KEY_INTERVAL = 300,
+    var KEY_INTERVAL = 250,
     self = this,
     lock = false,
     gamepad = {
@@ -14,12 +14,19 @@ function Controller(game){
         "PAUSE"      : 32,  // space
         "A"          : 90,  // z
         "B"          : 88,  // x
+        "X"          : 65,  // a
+        "Y"          : 83,  // s
+        "L1"         : 81,  // q
+        "L2"         : 69,  // e
+        "R1"         : 87,  // w
+        "R2"         : 82,  // r
         "MUSIC"      : 77,  // m
         "CANCEL"     : 191, // slash
-        "LEFT_ALT"   : 65,  // a
-        "RIGHT_ALT"  : 68,  // d
-        "UP_ALT"     : 87,  // w
-        "DOWN_ALT"   : 83,  // s
+        "SELECT"     : 16,  // shift
+        // "LEFT_ALT"   : 65,  // a
+        // "RIGHT_ALT"  : 68,  // d
+        // "UP_ALT"     : 87,  // w
+        // "DOWN_ALT"   : 83,  // s
     };
 
     this.game = game;
@@ -35,16 +42,27 @@ function Controller(game){
         Y: false,
         L1: false,
         L2: false,
+        R1: false,
+        R2: false,
         PAUSE: false,
         SELECT: false
     };
 
-    this.left  = function(){};
-    this.up    = function(){};
-    this.right = function(){};
-    this.down  = function(){};
-    this.a     = function(){};
-    this.b     = function(){};
+    this.frozen = {
+        pause : false,
+    };
+
+    this.left   = function(){console.log("left");};
+    this.up     = function(){console.log("up");};
+    this.right  = function(){console.log("right");};
+    this.down   = function(){console.log("down");};
+    this.a      = function(){console.log("A");};
+    this.b      = function(){console.log("B");};
+    this.x      = function(){console.log("X");};
+    this.y      = function(){console.log("Y");};
+    this.r1     = function(){console.log("R1");};
+    this.l1     = function(){console.log("L1");};
+    this.select = function(){console.log("select");};
 
     this.pressed = function(key){
         if(gamepad.connected && self.gamebutton[key])
@@ -63,10 +81,14 @@ function Controller(game){
         opts[keys.DOWN]      = function(event){ if(!lock && !self.game.PAUSED) self.down(event);  };
         opts[keys.A]         = function(event){ if(!lock && !self.game.PAUSED) self.a(event)      };
         opts[keys.B]         = function(event){ if(!lock && !self.game.PAUSED) self.b(event)      };
-        opts[keys.LEFT_ALT]  = function(event){ if(!lock && !self.game.PAUSED) self.left(event);  };
-        opts[keys.UP_ALT]    = function(event){ if(!lock && !self.game.PAUSED) self.up(event);    };
-        opts[keys.RIGHT_ALT] = function(event){ if(!lock && !self.game.PAUSED) self.right(event); };
-        opts[keys.DOWN_ALT]  = function(event){ if(!lock && !self.game.PAUSED) self.down(event);  };
+        opts[keys.X]         = function(event){ if(!lock && !self.game.PAUSED) self.x(event)      };
+        opts[keys.Y]         = function(event){ if(!lock && !self.game.PAUSED) self.y(event)      };
+        opts[keys.R1]        = function(event){ if(!lock && !self.game.PAUSED) self.r1(event)     };
+        opts[keys.L1]        = function(event){ if(!lock && !self.game.PAUSED) self.l1(event)     };
+        // opts[keys.LEFT_ALT]  = function(event){ if(!lock && !self.game.PAUSED) self.left(event);  };
+        // opts[keys.UP_ALT]    = function(event){ if(!lock && !self.game.PAUSED) self.up(event);    };
+        // opts[keys.RIGHT_ALT] = function(event){ if(!lock && !self.game.PAUSED) self.right(event); };
+        // opts[keys.DOWN_ALT]  = function(event){ if(!lock && !self.game.PAUSED) self.down(event);  };
 
         game.controls = this;
         this.direction = direction;
@@ -91,16 +113,6 @@ function Controller(game){
         }
         // window.addEventListener("gamepaddisconnected", function(e) { console.log("disconnected"); }, false);
     };
-
-    this.padinit = function(){
-        window.addEventListener("gamepadconnected", function(e) {
-            console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-            e.gamepad.index, e.gamepad.id,
-            e.gamepad.buttons.length, e.gamepad.axes.length);
-            gamepad.id = e.gamepad.index;
-            self.gamepadInput();
-        });
-    }
 
     this.keyboard = function KeyboardController(keys, repeat){
         /* Lookup of key codes to timer ID, or null for no repeat */
@@ -156,7 +168,6 @@ function Controller(game){
     }
 
     function buttonsPressed(axes, buttons){
-        // var pressed = {RIGHT:false, LEFT:false, UP:false, DOWN:false};
         self.gamebutton.RIGHT = Math.floor(axes[0])>0;
         self.gamebutton.LEFT  = Math.floor(axes[0])<0;
         self.gamebutton.DOWN  = Math.floor(axes[1])>0;
@@ -168,6 +179,8 @@ function Controller(game){
         self.gamebutton.Y = buttonPressed(buttons[2]);
         self.gamebutton.R1 = buttonPressed(buttons[5]);
         self.gamebutton.L1 = buttonPressed(buttons[4]);
+        self.gamebutton.R2 = buttonPressed(buttons[7]);
+        self.gamebutton.L2 = buttonPressed(buttons[6]);
         self.gamebutton.PAUSE  = buttonPressed(buttons[9]);
         self.gamebutton.SELECT = buttonPressed(buttons[8]);
         return self.gamebutton;
@@ -179,58 +192,53 @@ function Controller(game){
         buttonsPressed(self.pad.axes, self.pad.buttons);
 
         if (self.gamebutton.B) {
-            // console.log("B");
             if(!lock && !self.game.PAUSED) self.b();
         }
         if(self.gamebutton.A){
-            // console.log("A");
             if(!lock && !self.game.PAUSED) self.a();
         }
         if(self.gamebutton.Y){
-            // console.log("Y");
+            if(!lock && !self.game.PAUSED) self.y();
         }
         if(self.gamebutton.X){
-            // console.log("X");
+            if(!lock && !self.game.PAUSED) self.x();
         }
         if(self.gamebutton.L1){
-            // console.log("L1");
+            if(!lock && !self.game.PAUSED) self.l1();
         }
         if(self.gamebutton.R1){
-            // console.log("R1");
+            if(!lock && !self.game.PAUSED) self.r1();
         }
         if(self.gamebutton.SELECT){
-            // console.log("Select");
+            self.select();
             self.gamebutton.SELECT = false;
         }
-        if(self.gamebutton.PAUSE) {
-            self.pause();
-            self.gamebutton.PAUSE = false;
-            console.log("Start");
+        if(self.gamebutton.PAUSE){
+            if(!self.frozen.pause){
+                console.log("Start");
+                self.pause();
+                self.freeze("pause");
+                self.gamebutton.PAUSE = false;
+                setTimeout(function(){self.unfreeze("pause");}, KEY_INTERVAL*2);
+            }
         }
 
         if(self.gamebutton.RIGHT) {
-            // console.log("right");
             if(!lock && !self.game.PAUSED) self.right();
         }
         if(self.gamebutton.DOWN) {
-            // console.log("down");
             if(!lock && !self.game.PAUSED) self.down();
         }
         if(self.gamebutton.LEFT) {
-            // console.log("left");
             if(!lock && !self.game.PAUSED) self.left();
         }
         if(self.gamebutton.UP) {
             if(!lock && !self.game.PAUSED) self.up();
-            // console.log("up");
         }
 
         requestAnimationFrame(function(){
             setTimeout(self.gamepadInput, KEY_INTERVAL);
         });
-        // setTimeout(function(){requestAnimationFrame(self.gamepadInput);}, KEY_INTERVAL);
-        // console.log(game.delta, game.interval)
-        // requestAnimationFrame( function(){ if(game.delta>game.interval) self.gamepadInput(); } );
     };
 
     this.pause = function(event){
@@ -257,4 +265,12 @@ function Controller(game){
     this.locked = function(){
         return lock;
     };
+
+    this.freeze = function(button){
+        this.frozen[button] = true;
+    };
+
+    this.unfreeze = function(button){
+        this.frozen[button] = false;
+    }
 }

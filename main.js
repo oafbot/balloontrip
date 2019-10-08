@@ -317,10 +317,10 @@ var game,
 
     var set_stars = function(){
         for(i=0, l=15; i<l; i++){
-            var x = randomInt(0, stage.bbox().width),
-                y = randomInt(10, stage.bbox().height),
+            var x = randomInt(0, game.bounds.right),
+                y = randomInt(10, waterline),
 
-            star = game.layers.background.rect(1,1).fill('#06f').attr('class', 'star').move(x, y).opacity(0);
+            star = game.layers.background.rect(PIX,PIX).fill('#36C').attr('class', 'star').move(x, y).opacity(0);
 
             if(i<6) star.move(x, y).opacity(1);
 
@@ -472,7 +472,10 @@ var game,
             if(control.direction=="right")
                 physics.accelerate(PIX/2);
             else if(control.direction=="left")
-                physics.decelerate(PIX);
+                physics.momentum = physics.basespeed;
+                // while(physics.momentum>physics.basespeed){
+                //     physics.decelerate(PIX);
+                // }
 
             if(!control.pressed("A"))
                 player.animate(game.frame);
@@ -482,7 +485,10 @@ var game,
             if(control.direction=="left")
                 physics.accelerate(PIX/8);
             else if(control.direction=="right")
-                physics.decelerate(PIX/2);
+                physics.momentum = physics.basespeed;
+                // while(physics.momentum>physics.basespeed){
+                //     physics.decelerate(PIX/2);
+                // }
 
             if(!control.pressed("A"))
                 player.animate(game.frame);
