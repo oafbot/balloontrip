@@ -11,6 +11,7 @@ function Game(screen){
     this.fps = 32;
     this.interval = 1000/this.fps;
     this.timestamp = 0;
+    this.mode = "";
 
     this.queue  = {update:[], tween:[]};
     this.bounds = {top:0, bottom:undefined, right:undefined, left:0};

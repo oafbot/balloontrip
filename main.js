@@ -6,7 +6,10 @@ const DELAY = 350;
 const TOP = 25000;
 const WIDTH = 800;
 const HEIGHT = 480;
-const SCROLL = PIX/2;
+const HYPER  = PIX;
+const FAST   = PIX*0.75;
+const SLOW   = PIX*0.50;
+var   SCROLL = SLOW;
 
 var game,
     physics,
@@ -24,6 +27,8 @@ var game,
     low_alt_duration,
     distance,
     waterline,
+    cursor,
+    mode = 0,
     top = window.localStorage.getItem('BalloonTrip.hiscore'),
     ratio  = {},
     frames = {},
@@ -43,6 +48,7 @@ var game,
         low_alt_timer = 0;
         low_alt_duration = 0;
         distance = 0;
+        mode = 0;
 
         stage = screen.rect(WIDTH, HEIGHT).attr('id', 'backdrop');
         stage.fill('#000');
@@ -68,15 +74,19 @@ var game,
 
         physics = new Physics(game);
         gravity = physics.gravity(player.sprite, GRAVITY);
-        physics.speedRange(0, SCROLL*4);
+        physics.speedRange(0, SCROLL>=FAST ? SCROLL*2 : SCROLL*3);
 
         set_controls();
         set_display();
         set_title();
 
+        game.state = "start";
+
         game.start(function(){
             game.layers.title.opacity(0);
             game.layers.title.remove();
+
+            SCROLL = mode===0 ? SLOW : FAST;
 
             sound = new Sound(game);
             sound.init([
@@ -153,6 +163,36 @@ var game,
                 setTimeout(function(){sound.loop('music', 0.5);}, 500);
                 game.textbox.status.text("");
                 this.game.run();
+            }
+        });
+
+        control.set("select", function(){
+            if(game.state!=game.states["RUNNING"]){
+                mode = mode===0 ? 1 : 0;
+                if(mode===0){
+                    cursor.move(0, -40);
+                }
+                else{
+                    cursor.move(0, 40);
+                }
+            }
+        });
+
+        control.set("up", function(){
+            if(game.state!=game.states["RUNNING"]){
+                if(mode!==0){
+                    cursor.move(0, -40);
+                    mode = 0;
+                }
+            }
+        });
+
+        control.set("down", function(){
+            if(game.state!=game.states["RUNNING"]){
+                if(mode!=1){
+                    cursor.move(0, 40);
+                    mode = 1;
+                }
             }
         });
     };
@@ -235,13 +275,14 @@ var game,
     };
 
     var set_title = function(){
-        var x = 150;
-        var y = 100;
+        var x = (800-432)/2;
+        var y = 64;
         var pix = PIX;
         var t40 = new Sprite(game, palette[4], 40, pix);
         var t32 = new Sprite(game, palette[4], 32, pix);
         var t24 = new Sprite(game, palette[4], 24, pix);
         var t16 = new Sprite(game, palette[4], 16, pix);
+
         game.layers.title.rect(WIDTH,HEIGHT).fill('#000');
         game.layers.title.add(t32.draw(alpha.b, {x:x, y:y}));
         game.layers.title.add(t32.draw(alpha.a, {x:x+32*pix,  y:y}));
@@ -256,11 +297,17 @@ var game,
         game.layers.title.add(t32.draw(alpha.g, {x:x+128*pix, y:y+48*pix}));
         game.layers.title.add(t32.draw(alpha.h, {x:x+160*pix, y:y+48*pix}));
         game.layers.title.add(t32.draw(alpha.t, {x:x+192*pix, y:y+48*pix}));
-        game.layers.title.text("PRESS SPACE")
-        .move(screen.bbox().cx, y+256)
-            .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
+
+        cursor.show().move(screen.bbox().cx - 96, y+232);
+        game.layers.title.add(cursor.sprite);
+        game.layers.title.text("LEISURELY")
+            .move(screen.bbox().cx - 48, y+256)
+            .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12});
+        game.layers.title.text("HECTIC")
+            .move(screen.bbox().cx - 48, y+296)
+            .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12});
         game.layers.title.text("©2019  PRETENDO")
-            .move(screen.bbox().cx, y+310)
+            .move(screen.bbox().cx, y+374)
             .font({'family':'Press Start 2P', 'fill':'#fff', 'size':12, anchor:'middle'});
     }
 
@@ -295,7 +342,7 @@ var game,
     };
 
     var set_balloons = function(){
-        var bln, bal = [];
+        var red, bln, bal = [];
 
         balloon = new Sprite(game, palette[1], DIM, PIX);
 
@@ -314,6 +361,9 @@ var game,
             bln = balloon.factory('balloons', frames.balloon).hide();
             game.layers.objects.add(bln.sprite.move(0, 0).attr('class', 'balloon'));
         }
+        red = new Sprite(game, palette[0], DIM, PIX);
+        cursor = red.factory('balloons', [[[bal[0], { x:0, y: 0}], [bal[1], { x:0, y: DIM*2*PIX }]]]).hide();
+        // cursor.sprite.scale(0.8);
     };
 
     var set_stars = function(){
@@ -381,9 +431,9 @@ var game,
             y2 = randomInt(player.height()/2, waterline + player.height()),
             y3 = randomInt(0, stage.bbox().height);
 
-        ratio.balloon = distance>150 ? 0.05 : 0.03;
-        ratio.bolt    = distance>100 ? 0.25 : 0.15;
-        ratio.moving  = distance>250 ? 0.50 : 0.30;
+        ratio.balloon = distance>150 ? (SCROLL>=FAST ? 0.07 : 0.05 ) : 0.03;
+        ratio.bolt    = distance>100 ? (SCROLL>=FAST ? 0.45 : 0.25 ) : 0.15;
+        ratio.moving  = distance>250 ? (SCROLL>=FAST ? 0.60 : 0.50 ) : 0.30;
         ratio.star    = 0.3;
 
         // generate balloons
@@ -557,11 +607,14 @@ var game,
         }
         else{
             if( !physics.vector.bouncing && control.pressed("RIGHT") ){
+                if(control.direction=="left")
+                    physics.momentum = physics.basespeed;
+
                 control.direction = "right";
                 physics.vector.direction = control.pressed("A") ? 'NE' : 'E';
 
                 if(player.sprite.cx()<game.bounds.right && !gravity.grounded && game.state==game.states.RUNNING){
-                    player.move(physics.momentum, 0);
+                    player.move(SCROLL+physics.momentum, 0);
                 }
                 else{
                     physics.momentum = 0;
@@ -569,6 +622,9 @@ var game,
             }
 
             if( !physics.vector.bouncing && control.pressed("LEFT") ){
+                if(control.direction=="right")
+                    physics.momentum = physics.basespeed;
+
                 control.direction = "left";
                 physics.vector.direction = control.pressed("A") ? 'NW' : 'W';
 
@@ -639,24 +695,25 @@ var game,
                 type.splice(index, 1);
                 switch(type[0]){
                     case "N":
-                        items[i].dmove(PIX*0.75, -PIX*0.75);
+                        items[i].dmove(SCROLL*1.5, -SCROLL*1.5);
                         break;
                     case "NE":
-                        items[i].dmove(PIX*1.25, -PIX*0.75);
+
+                        items[i].dmove(SCROLL*2.5, -SCROLL*1.5);
                         break;
                     case "E":
-                        items[i].dmove(PIX*1.25, 0);
+                        items[i].dmove(SCROLL*2.5, 0);
                         break;
                     case "SE":
-                        items[i].dmove(PIX*1.25, PIX*0.75);
+                        items[i].dmove(SCROLL*2.5, SCROLL*1.5);
                         break;
                     case "S":
-                        items[i].dmove(PIX*0.75, PIX*0.75);
+                        items[i].dmove(SCROLL*1.5, SCROLL*1.5);
                         break;
                 }
             }
             else{
-                items[i].dmove(PIX*0.75);
+                items[i].dmove(SCROLL*1.5);
             }
         }
 
