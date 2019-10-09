@@ -72,17 +72,19 @@ function Controller(game){
         select : false
     };
 
-    this.left   = function(){console.log("left");};
-    this.up     = function(){console.log("up");};
-    this.right  = function(){console.log("right");};
-    this.down   = function(){console.log("down");};
-    this.a      = function(){console.log("A");};
-    this.b      = function(){console.log("B");};
-    this.x      = function(){console.log("X");};
-    this.y      = function(){console.log("Y");};
-    this.r1     = function(){console.log("R1");};
-    this.l1     = function(){console.log("L1");};
-    this.select = function(){console.log("select");};
+    this.left   = function(){ console.log("left");   };
+    this.up     = function(){ console.log("up");     };
+    this.right  = function(){ console.log("right");  };
+    this.down   = function(){ console.log("down");   };
+    this.a      = function(){ console.log("A");      };
+    this.b      = function(){ console.log("B");      };
+    this.x      = function(){ console.log("X");      };
+    this.y      = function(){ console.log("Y");      };
+    this.r1     = function(){ console.log("R1");     };
+    this.l1     = function(){ console.log("L1");     };
+    this.r2     = function(){ console.log("R1");     };
+    this.l2     = function(){ console.log("L1");     };
+    this.select = function(){ console.log("select"); };
 
     this.pressed = function(key){
         if(gamepad.connected && self.gamebutton[key])
@@ -96,16 +98,16 @@ function Controller(game){
         var opts = {};
         opts[keys.PAUSE]  = function(event){ self.pause(event); };
         opts[keys.SELECT] = function(event){ self.select(event); };
-        opts[keys.LEFT]   = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.left(event);  };
-        opts[keys.UP]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.up(event);    };
-        opts[keys.RIGHT]  = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.right(event); };
-        opts[keys.DOWN]   = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.down(event);  };
-        opts[keys.A]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.a(event)      };
-        opts[keys.B]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.b(event)      };
-        opts[keys.X]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.x(event)      };
-        opts[keys.Y]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.y(event)      };
-        opts[keys.R1]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.r1(event)     };
-        opts[keys.L1]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state=="start") self.l1(event)     };
+        opts[keys.LEFT]   = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.left(event);  };
+        opts[keys.UP]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.up(event);    };
+        opts[keys.RIGHT]  = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.right(event); };
+        opts[keys.DOWN]   = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.down(event);  };
+        opts[keys.A]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.a(event)      };
+        opts[keys.B]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.b(event)      };
+        opts[keys.X]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.x(event)      };
+        opts[keys.Y]      = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.y(event)      };
+        opts[keys.R1]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.r1(event)     };
+        opts[keys.L1]     = function(event){ if((!lock && !self.game.PAUSED) || self.game.state==0) self.l1(event)     };
         // opts[keys.LEFT_ALT]  = function(event){ if(!lock && !self.game.PAUSED) self.left(event);  };
         // opts[keys.UP_ALT]    = function(event){ if(!lock && !self.game.PAUSED) self.up(event);    };
         // opts[keys.RIGHT_ALT] = function(event){ if(!lock && !self.game.PAUSED) self.right(event); };
@@ -205,28 +207,28 @@ function Controller(game){
         buttonsPressed(self.pad.axes, self.pad.buttons);
 
         if(self.gamebutton.A){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.a();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.a();
         }
         if (self.gamebutton.B) {
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.b();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.b();
         }
         if(self.gamebutton.X){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.x();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.x();
         }
         if(self.gamebutton.Y){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.y();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.y();
         }
         if(self.gamebutton.L1){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.l1();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.l1();
         }
         if(self.gamebutton.R1){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.r1();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.r1();
         }
         if(self.gamebutton.L2){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.l2();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.l2();
         }
         if(self.gamebutton.R2){
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.r2();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.r2();
         }
         if(self.gamebutton.SELECT){
             if(!self.frozen.pause){
@@ -246,16 +248,16 @@ function Controller(game){
         }
 
         if(self.gamebutton.RIGHT) {
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.right();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.right();
         }
         if(self.gamebutton.DOWN) {
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.down();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.down();
         }
         if(self.gamebutton.LEFT) {
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.left();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.left();
         }
         if(self.gamebutton.UP) {
-            if((!lock && !self.game.PAUSED) || self.game.state=="start") self.up();
+            if((!lock && !self.game.PAUSED) || self.game.state==0) self.up();
         }
 
         requestAnimationFrame(function(){

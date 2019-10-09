@@ -5,3 +5,4 @@ venv
 *.sublime-workspace
 README.html
 hiscore.txt
+sketch.js
